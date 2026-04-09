@@ -1,0 +1,1503 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import * as THREE from "three";
+
+/* ═══════════════════════════════════════════════
+   GLOBAL STYLES — Premium Design System v3
+═══════════════════════════════════════════════ */
+const GlobalStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap');
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    :root {
+      --bg:        #0B0B0F;
+      --bg2:       #0f1019;
+      --bg3:       #141520;
+      --bg4:       #1a1d2e;
+      --surface:   rgba(255,255,255,0.03);
+      --surface2:  rgba(255,255,255,0.06);
+      --surface3:  rgba(255,255,255,0.09);
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.12);
+      --border3:   rgba(255,255,255,0.18);
+
+      --cyan:      #22d3ee;
+      --cyan-d:    #06b6d4;
+      --violet:    #818cf8;
+      --violet-d:  #6366f1;
+      --amber:     #fbbf24;
+      --green:     #34d399;
+      --rose:      #fb7185;
+      --orange:    #fb923c;
+      --pink:      #f472b6;
+
+      --t1: #f1f5f9;
+      --t2: #94a3b8;
+      --t3: #475569;
+      --t4: #1e293b;
+
+      --grad-main:   linear-gradient(135deg, #22d3ee, #818cf8);
+      --grad-warm:   linear-gradient(135deg, #fbbf24, #fb923c);
+      --grad-cool:   linear-gradient(135deg, #818cf8, #6366f1);
+      --grad-hero:   linear-gradient(135deg, #22d3ee 0%, #818cf8 50%, #fbbf24 100%);
+
+      --shadow-sm:   0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md:   0 4px 24px rgba(0,0,0,0.4);
+      --shadow-lg:   0 8px 48px rgba(0,0,0,0.5);
+      --shadow-cyan: 0 0 40px rgba(34,211,238,0.2);
+      --shadow-vio:  0 0 40px rgba(129,140,248,0.2);
+
+      --r8:8px; --r12:12px; --r16:16px; --r20:20px; --r24:24px; --r32:32px; --rpill:999px;
+      --transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html { font-size:16px; scroll-behavior:smooth; }
+    body {
+      background: var(--bg);
+      color: var(--t1);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      padding-bottom: 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, textarea, select, button { font-family: 'Inter', sans-serif; }
+    input { font-size: 16px !important; }
+    ::-webkit-scrollbar { width:3px; height:3px; }
+    ::-webkit-scrollbar-thumb { background: var(--violet); border-radius:2px; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+    @keyframes slideUp  { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    @keyframes scaleIn  { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+    @keyframes float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    @keyframes spin     { to{transform:rotate(360deg)} }
+    @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes bounce   { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
+    @keyframes shimmer  { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    @keyframes ticker   { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    @keyframes gradMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes glow     { 0%,100%{box-shadow:0 0 20px rgba(34,211,238,0.3)} 50%{box-shadow:0 0 60px rgba(34,211,238,0.6)} }
+    @keyframes tilt     { 0%{transform:perspective(600px) rotateX(0) rotateY(0)} }
+    @keyframes scanLine { 0%{top:-2px} 100%{top:100%} }
+
+    .a-fadeup  { animation: fadeUp  0.55s cubic-bezier(0.4,0,0.2,1) both; }
+    .a-fadein  { animation: fadeIn  0.4s ease both; }
+    .a-scalein { animation: scaleIn 0.3s ease both; }
+    .a-float   { animation: float  3.5s ease-in-out infinite; }
+
+    /* ── Glass System ── */
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--r16);
+    }
+    .glass2 {
+      background: var(--surface2);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--border2);
+      border-radius: var(--r20);
+    }
+    .glass3 {
+      background: var(--surface3);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1px solid var(--border3);
+      border-radius: var(--r24);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r20);
+      transition: var(--transition);
+    }
+    .card:active { transform: scale(0.985); }
+    .card-hover:hover {
+      border-color: var(--border2);
+      background: var(--surface2);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      font-weight: 600; cursor: pointer; transition: var(--transition);
+      border: none; outline: none; white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan-d), var(--violet-d));
+      color: #fff;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::after {
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(135deg, var(--violet-d), var(--cyan-d));
+      opacity:0; transition: opacity 0.3s;
+    }
+    .btn-primary:hover::after { opacity:1; }
+    .btn-primary > * { position:relative; z-index:1; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border2) !important;
+      color: var(--t2);
+    }
+    .btn-outline:hover { border-color: var(--cyan) !important; color: var(--cyan); background: rgba(34,211,238,0.05); }
+    .btn-ghost { background:transparent; border:none; color:var(--t2); }
+    .btn-ghost:hover { color:var(--t1); }
+    .btn-danger { background: rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.25); color:var(--rose); }
+    .btn-success { background: rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.25); color:var(--green); }
+    .btn-warning { background: rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.25); color:var(--amber); }
+
+    /* ── Gradient text ── */
+    .gt {
+      background: var(--grad-hero);
+      background-size: 200% 200%;
+      animation: gradMove 4s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .gt-cyan { background: var(--grad-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+    /* ── Badges ── */
+    .badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:var(--rpill); letter-spacing:0.5px; text-transform:uppercase; }
+    .b-cyan   { background:rgba(34,211,238,0.12); color:var(--cyan);   border:1px solid rgba(34,211,238,0.25); }
+    .b-amber  { background:rgba(251,191,36,0.12); color:var(--amber);  border:1px solid rgba(251,191,36,0.25); }
+    .b-green  { background:rgba(52,211,153,0.12); color:var(--green);  border:1px solid rgba(52,211,153,0.25); }
+    .b-violet { background:rgba(129,140,248,0.12); color:var(--violet); border:1px solid rgba(129,140,248,0.25); }
+    .b-rose   { background:rgba(251,113,133,0.12); color:var(--rose);  border:1px solid rgba(251,113,133,0.25); }
+
+    /* ── Inputs ── */
+    .input {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r12);
+      padding: 13px 16px;
+      color: var(--t1);
+      width: 100%;
+      outline: none;
+      font-size: 15px;
+      transition: border 0.2s;
+    }
+    .input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.08); }
+    .input::placeholder { color: var(--t3); }
+    .label { font-size:12px; font-weight:600; color:var(--t3); margin-bottom:7px; display:block; letter-spacing:0.3px; }
+
+    /* ── Toggle ── */
+    .toggle { width:42px; height:24px; border-radius:12px; position:relative; cursor:pointer; transition:background 0.3s; flex-shrink:0; }
+    .toggle-knob { position:absolute; top:4px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      position: fixed; bottom:0; left:0; right:0; z-index:900;
+      background: rgba(11,11,15,0.95);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-top: 1px solid var(--border);
+      padding: 8px 4px max(10px, env(safe-area-inset-bottom));
+      display: grid; grid-template-columns: repeat(5,1fr);
+    }
+    .nav-btn { display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 4px; cursor:pointer; background:transparent; border:none; transition:var(--transition); }
+    .nav-ico { font-size:22px; transition:transform 0.2s; }
+    .nav-lbl { font-size:10px; font-weight:600; color:var(--t3); }
+    .nav-btn.on .nav-ico { transform:scale(1.15); }
+    .nav-btn.on .nav-lbl { color:var(--cyan); }
+
+    /* ── Chips ── */
+    .chips { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; }
+    .chips::-webkit-scrollbar { display:none; }
+    .chip { padding:7px 15px; border-radius:var(--rpill); font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); white-space:nowrap; border:1px solid var(--border); background:var(--surface); color:var(--t2); }
+    .chip.on { background:rgba(34,211,238,0.1); border-color:rgba(34,211,238,0.35); color:var(--cyan); font-weight:600; }
+    .chip:active { transform:scale(0.95); }
+
+    /* ── Progress ── */
+    .prog { height:5px; background:var(--surface3); border-radius:3px; overflow:hidden; }
+    .prog-fill { height:100%; background:var(--grad-main); border-radius:3px; transition:width 0.7s ease; }
+
+    /* ── Modal ── */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(10px); z-index:1000; display:flex; align-items:flex-end; }
+    .modal-sheet { width:100%; background:var(--bg2); border-radius:24px 24px 0 0; border-top:1px solid var(--border2); max-height:92vh; overflow-y:auto; animation:slideUp 0.35s cubic-bezier(0.4,0,0.2,1); }
+
+    /* ── Shimmer skeleton ── */
+    .skel { background:linear-gradient(90deg,var(--surface) 25%,var(--surface3) 50%,var(--surface) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--r8); }
+
+    /* ── Stars ── */
+    .star-on { color:#fbbf24; } .star-off { color:var(--t4); }
+
+    /* ── Tilt card effect ── */
+    .tilt { transform-style:preserve-3d; transition:transform 0.15s ease; }
+
+    /* ── Notification dot ── */
+    .notif { width:8px; height:8px; border-radius:50%; background:var(--rose); position:absolute; top:0; right:0; border:2px solid var(--bg); }
+
+    /* ── Divider ── */
+    .divider { height:1px; background:var(--border); }
+
+    /* ── Section ── */
+    .sec-tag { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--cyan); margin-bottom:6px; }
+    .sec-h { font-size:22px; font-weight:800; font-family:'Poppins',sans-serif; }
+
+    /* ── Loader ── */
+    .spinner { width:20px; height:20px; border:2px solid var(--border2); border-top-color:var(--cyan); border-radius:50%; animation:spin 0.75s linear infinite; }
+    .dots { display:flex; gap:5px; }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--cyan); animation:bounce 1.4s ease-in-out infinite; }
+
+    /* ── Page wrap ── */
+    .page { animation: fadeUp 0.4s ease both; min-height:100vh; }
+
+    /* ── Plan cards ── */
+    .plan-popular { box-shadow:0 0 0 1.5px var(--violet), 0 0 40px rgba(129,140,248,0.15); }
+
+    /* ── Split auth layout ── */
+    @media (min-width:768px) {
+      body { padding-bottom:0; }
+      .bottom-nav { display:none; }
+      .auth-split { display:grid !important; grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width:767px) {
+      .auth-left { display:none !important; }
+      .desktop-nav { display:none; }
+    }
+    @media (min-width:768px) {
+      .desktop-nav { display:flex !important; }
+      .mobile-only { display:none !important; }
+    }
+  `}</style>
+);
+
+/* ═══════════════ HELPERS ═══════════════ */
+const Stars = ({ r, size=13 }) => (
+  <span style={{display:"flex",gap:1}}>
+    {[1,2,3,4,5].map(s=>(
+      <span key={s} style={{fontSize:size,color:s<=Math.round(r)?"#fbbf24":"#1e293b"}}>★</span>
+    ))}
+  </span>
+);
+const Dot = ({on}) => <span style={{width:7,height:7,borderRadius:"50%",background:on?"#34d399":"#fb7185",display:"inline-block",flexShrink:0}}/>;
+const Spinner = () => <div className="spinner"/>;
+const BLoader = () => <div className="dots">{[0,1,2].map(i=><div key={i} className="dot" style={{animationDelay:`${i*.15}s`}}/>)}</div>;
+
+function Skel({h=20,w="100%",r=8}){
+  return <div className="skel" style={{height:h,width,borderRadius:r}}/>;
+}
+
+/* ═══════════════ DATA ═══════════════ */
+const CATS=[
+  {id:1,icon:"🏠",name:"Home Cleaning",count:340,c:"#22d3ee"},{id:2,icon:"🔧",name:"Plumber",count:210,c:"#818cf8"},
+  {id:3,icon:"⚡",name:"Electrician",count:185,c:"#fbbf24"},{id:4,icon:"🏥",name:"Doctor",count:290,c:"#fb7185"},
+  {id:5,icon:"💇",name:"Salon & Spa",count:420,c:"#f472b6"},{id:6,icon:"📚",name:"Tutor",count:310,c:"#34d399"},
+  {id:7,icon:"🚗",name:"Car Service",count:160,c:"#60a5fa"},{id:8,icon:"🍕",name:"Food",count:530,c:"#fb923c"},
+  {id:9,icon:"🐾",name:"Pet Care",count:95,c:"#a78bfa"},{id:10,icon:"📸",name:"Photography",count:140,c:"#f59e0b"},
+  {id:11,icon:"🎉",name:"Events",count:180,c:"#ec4899"},{id:12,icon:"💼",name:"Finance",count:120,c:"#6366f1"},
+];
+
+const BIZ=[
+  {id:1,name:"CleanMate Pro",cat:"Home Cleaning",rating:4.8,reviews:342,price:299,label:"₹299/visit",badge:"Top Rated",verified:true,avail:true,resp:"< 5 min",loc:"Koregaon Park",icon:"🏠",color:"#22d3ee",about:"Premium home cleaning with eco-friendly products. Trained staff, fully insured. Serving Pune since 2018.",services:["Deep Cleaning ₹499","Regular Cleaning ₹299","Move-In/Out ₹799","Office Cleaning ₹999"],photos:["🛋️","🚿","🍳","🪟"],leads:89,views:1240,plan:"Pro",status:"approved"},
+  {id:2,name:"Dr. Priya's Dental",cat:"Doctor",rating:4.9,reviews:521,price:500,label:"₹500+",badge:"Verified",verified:true,avail:true,resp:"< 10 min",loc:"Viman Nagar",icon:"🦷",color:"#fb7185",about:"Advanced dental care, 15+ years experience. All procedures: cleaning to implants.",services:["Cleaning ₹500","Whitening ₹3000","Braces ₹25000","Root Canal ₹4500"],photos:["🦷","💊","🩺","🏥"],leads:134,views:2100,plan:"Elite",status:"approved"},
+  {id:3,name:"Radiance Beauty Studio",cat:"Salon & Spa",rating:4.7,reviews:289,price:399,label:"₹399+",badge:"Fast Response",verified:true,avail:false,resp:"< 15 min",loc:"Baner",icon:"💅",color:"#f472b6",about:"Premium salon — full beauty & spa services. Female-only space, hygiene-certified.",services:["Haircut ₹399","Facial ₹699","Manicure ₹299","Full Wax ₹999"],photos:["💅","💆","✂️","🌸"],leads:67,views:890,plan:"Growth",status:"approved"},
+  {id:4,name:"FixIt Tech Repairs",cat:"Electrician",rating:4.6,reviews:198,price:149,label:"₹149+",badge:"Fast Response",verified:false,avail:true,resp:"< 3 min",loc:"Wakad",icon:"🔧",color:"#34d399",about:"Quick phone, laptop, AC & appliance repair. Doorstep service. Same-day fix guarantee.",services:["Phone Screen ₹299","Laptop ₹499","AC Service ₹399","TV Repair ₹599"],photos:["📱","💻","❄️","📺"],leads:45,views:670,plan:"Growth",status:"approved"},
+  {id:5,name:"TutorBridge Academy",cat:"Tutor",rating:4.9,reviews:412,price:800,label:"₹800/hr",badge:"Top Rated",verified:true,avail:true,resp:"< 30 min",loc:"Kothrud",icon:"📚",color:"#818cf8",about:"Expert tutors Class 8-12 + JEE/NEET. 98% students improved grades. Online & offline.",services:["Maths ₹800/hr","Science ₹800/hr","JEE Prep ₹1200/hr","NEET Prep ₹1200/hr"],photos:["📚","✏️","🔬","🧮"],leads:201,views:3200,plan:"Pro",status:"approved"},
+  {id:6,name:"SpeedoMoto Auto",cat:"Car Service",rating:4.5,reviews:167,price:249,label:"₹249+",badge:"Verified",verified:true,avail:true,resp:"< 20 min",loc:"Hinjewadi",icon:"🚗",color:"#60a5fa",about:"Professional car servicing & detailing at your doorstep. All brands, genuine parts.",services:["Car Wash ₹249","Oil Change ₹799","Tyre ₹149","Detailing ₹2499"],photos:["🚗","🛞","🔧","✨"],leads:38,views:540,plan:"Growth",status:"approved"},
+  {id:7,name:"QuickFix Electricals",cat:"Electrician",rating:4.3,reviews:89,price:199,label:"₹199+",badge:"New",verified:false,avail:true,resp:"< 10 min",loc:"Shivajinagar",icon:"⚡",color:"#fbbf24",about:"Experienced electricians for home and office. Wiring, installation, repair.",services:["Wiring ₹499","Fan Install ₹199","Switch Fix ₹149","AC Install ₹799"],photos:["⚡","🔌","💡","🏠"],leads:12,views:210,plan:"Free",status:"pending"},
+];
+
+const PLANS=[
+  {id:"free",name:"Free",price:0,color:"#475569",leads:5,features:["5 leads/month","Basic listing","Standard placement","WhatsApp button"]},
+  {id:"growth",name:"Growth",price:999,color:"#22d3ee",leads:50,features:["50 leads/month","Verified badge","Priority listing","Analytics basic","WhatsApp + Call"]},
+  {id:"pro",name:"Pro",price:2499,color:"#818cf8",leads:200,popular:true,features:["200 leads/month","Featured spotlight","AI Business Coach","Full analytics","Top 3 placement","Custom profile"]},
+  {id:"elite",name:"Elite",price:4999,color:"#fbbf24",leads:9999,features:["Unlimited leads","#1 Position always","Dedicated manager","Custom ads","AI + Pro features","Priority support"]},
+];
+
+const ADMIN_STATS=[
+  {l:"Total Users",v:"12,480",ch:"+18%",i:"👥",c:"#22d3ee"},
+  {l:"Businesses",v:"3,241",ch:"+24%",i:"🏪",c:"#818cf8"},
+  {l:"Revenue MTD",v:"₹8.4L",ch:"+31%",i:"💰",c:"#fbbf24"},
+  {l:"Leads Today",v:"1,892",ch:"+12%",i:"⚡",c:"#34d399"},
+];
+
+/* ═══════════════ THREE.JS HERO ═══════════════ */
+function HeroThree() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const W = el.clientWidth, H = el.clientHeight;
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(65, W/H, 0.1, 500);
+    cam.position.z = 30;
+    const renderer = new THREE.WebGLRenderer({antialias:false,alpha:true,powerPreference:"low-power"});
+    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+    renderer.setClearColor(0,0); el.appendChild(renderer.domElement);
+
+    // Particles
+    const N=700, pos=new Float32Array(N*3), col=new Float32Array(N*3);
+    for(let i=0;i<N;i++){
+      pos[i*3]=(Math.random()-.5)*110; pos[i*3+1]=(Math.random()-.5)*70; pos[i*3+2]=(Math.random()-.5)*55;
+      const t=Math.random();
+      if(t<.4){col[i*3]=.13;col[i*3+1]=.83;col[i*3+2]=.93;}
+      else if(t<.75){col[i*3]=.51;col[i*3+1]=.55;col[i*3+2]=.97;}
+      else{col[i*3]=.98;col[i*3+1]=.75;col[i*3+2]=.14;}
+    }
+    const pg=new THREE.BufferGeometry();
+    pg.setAttribute("position",new THREE.BufferAttribute(pos,3));
+    pg.setAttribute("color",new THREE.BufferAttribute(col,3));
+    const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.22,vertexColors:true,transparent:true,opacity:.75}));
+    scene.add(pts);
+
+    // Rings
+    const r1=new THREE.Mesh(new THREE.TorusGeometry(15,.06,6,90),new THREE.MeshBasicMaterial({color:0x22d3ee,wireframe:true,transparent:true,opacity:.1}));
+    const r2=new THREE.Mesh(new THREE.TorusGeometry(22,.05,5,110),new THREE.MeshBasicMaterial({color:0x818cf8,wireframe:true,transparent:true,opacity:.07}));
+    r2.rotation.x=Math.PI/3; scene.add(r1); scene.add(r2);
+
+    // Icosahedron (floating)
+    const ico=new THREE.Mesh(new THREE.IcosahedronGeometry(5,1),new THREE.MeshBasicMaterial({color:0x22d3ee,wireframe:true,transparent:true,opacity:.13}));
+    ico.position.set(-20,4,-10); scene.add(ico);
+
+    // Octahedron
+    const oct=new THREE.Mesh(new THREE.OctahedronGeometry(3),new THREE.MeshBasicMaterial({color:0xfbbf24,wireframe:true,transparent:true,opacity:.18}));
+    oct.position.set(22,-5,-5); scene.add(oct);
+
+    let mx=0,my=0,ti=0,af;
+    const onM=e=>{mx=(e.clientX/W-.5)*2;my=-(e.clientY/H-.5)*2;};
+    window.addEventListener("mousemove",onM);
+    const loop=()=>{
+      af=requestAnimationFrame(loop); ti+=.004;
+      pts.rotation.y=ti*.04; pts.rotation.x=ti*.015;
+      r1.rotation.x=ti*.22; r1.rotation.z=ti*.1;
+      r2.rotation.z=-ti*.08; r2.rotation.y=ti*.06;
+      ico.rotation.x=ti*.3; ico.rotation.y=ti*.25;
+      oct.rotation.x=-ti*.4; oct.rotation.z=ti*.35;
+      cam.position.x+=(mx*3-cam.position.x)*.025;
+      cam.position.y+=(my*2-cam.position.y)*.025;
+      cam.lookAt(scene.position);
+      renderer.render(scene,cam);
+    };
+    loop();
+    const onR=()=>{
+      const nw=el.clientWidth,nh=el.clientHeight;
+      cam.aspect=nw/nh; cam.updateProjectionMatrix(); renderer.setSize(nw,nh);
+    };
+    window.addEventListener("resize",onR);
+    return ()=>{ cancelAnimationFrame(af); window.removeEventListener("mousemove",onM); window.removeEventListener("resize",onR); renderer.dispose(); if(el.contains(renderer.domElement))el.removeChild(renderer.domElement); };
+  },[]);
+  return <div ref={ref} style={{position:"absolute",inset:0,zIndex:0}}/>;
+}
+
+/* ═══════════════ AI ENGINE ═══════════════ */
+async function callAI(system, userMsg, history=[]) {
+  try {
+    const msgs = [...history.map(m=>({role:m.role,content:m.text})), {role:"user",content:userMsg}];
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:700,system,messages:msgs})
+    });
+    const d = await res.json();
+    return d.content?.[0]?.text || smartFallback(userMsg);
+  } catch { return smartFallback(userMsg); }
+}
+
+function smartFallback(q="") {
+  const l=q.toLowerCase();
+  if(l.includes("clean")) return "For home cleaning in Pune, CleanMate Pro (₹299/visit, ⭐4.8) is top-rated. Eco-friendly, verified, responds in <5 min. Book via WhatsApp for instant confirmation.";
+  if(l.includes("doctor")||l.includes("dental")) return "Dr. Priya's Dental Care (⭐4.9, 521 reviews) in Viman Nagar is Pune's most trusted dental clinic. Cleaning from ₹500, responds in <10 min.";
+  if(l.includes("tutor")||l.includes("jee")||l.includes("neet")) return "TutorBridge Academy (⭐4.9) covers JEE/NEET prep at ₹1200/hr and regular subjects at ₹800/hr. Online + offline, 98% students improved grades.";
+  if(l.includes("cheap")||l.includes("budget")||l.includes("affordable")) return "Budget picks: FixIt Repairs from ₹149, SpeedoMoto Auto from ₹249, Regular cleaning from ₹299. All verified with 4.5+ ratings.";
+  if(l.includes("ac")||l.includes("repair")) return "FixIt Tech Repairs handles AC service at ₹399 with doorstep service. Responds in under 3 minutes — fastest in Pune!";
+  return "I can help you find any service in Pune! Try asking about cleaning, doctors, tutors, salons, car repair, or electricians. What do you need today?";
+}
+
+/* ═══════════════ TILT CARD HOOK ═══════════════ */
+function useTilt(ref) {
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const handle = e => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX-r.left)/r.width-.5;
+      const y = (e.clientY-r.top)/r.height-.5;
+      el.style.transform = `perspective(600px) rotateX(${-y*8}deg) rotateY(${x*8}deg) scale(1.02)`;
+    };
+    const reset = () => { el.style.transform="perspective(600px) rotateX(0) rotateY(0) scale(1)"; };
+    el.addEventListener("mousemove",handle);
+    el.addEventListener("mouseleave",reset);
+    return ()=>{ el.removeEventListener("mousemove",handle); el.removeEventListener("mouseleave",reset); };
+  },[]);
+}
+
+/* ═══════════════ BIZ CARD ═══════════════ */
+function BizCard({b, onClick, compact=false}) {
+  const ref = useRef(null);
+  useTilt(ref);
+  return (
+    <div ref={ref} onClick={onClick} className="card card-hover tilt" style={{padding:compact?"14px":"20px",cursor:"pointer",position:"relative",overflow:"hidden",borderRadius:20}}>
+      <div style={{position:"absolute",top:0,right:0,width:90,height:90,background:`radial-gradient(circle at top right,${b.color}15,transparent)`,pointerEvents:"none"}}/>
+      <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:compact?8:14}}>
+        <div style={{width:compact?46:54,height:compact?46:54,borderRadius:14,background:`${b.color}15`,border:`1px solid ${b.color}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:compact?22:28,flexShrink:0}}>{b.icon}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+            <span style={{fontWeight:700,fontSize:compact?14:15,lineHeight:1.2,fontFamily:"Poppins"}}>{b.name}</span>
+            {b.verified && <span style={{fontSize:13}}>✅</span>}
+          </div>
+          <div style={{fontSize:12,color:"var(--t3)",marginBottom:5}}>{b.cat} · 📍 {b.loc}</div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <Stars r={b.rating} size={12}/>
+            <span style={{fontWeight:700,fontSize:13}}>{b.rating}</span>
+            <span style={{color:"var(--t3)",fontSize:12}}>({b.reviews})</span>
+          </div>
+        </div>
+        <div style={{textAlign:"right",flexShrink:0}}>
+          <div style={{fontWeight:800,fontSize:15,color:b.color,fontFamily:"Poppins"}}>{b.label}</div>
+          <div style={{display:"flex",alignItems:"center",gap:4,marginTop:4,justifyContent:"flex-end"}}>
+            <Dot on={b.avail}/><span style={{fontSize:11,color:b.avail?"#34d399":"#fb7185"}}>{b.avail?"Open":"Busy"}</span>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:compact?0:12}}>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          <span className="badge b-cyan">{b.badge}</span>
+          <span style={{fontSize:11,color:"var(--t2)",display:"flex",alignItems:"center",gap:3}}>⚡ {b.resp}</span>
+        </div>
+        <div style={{fontSize:11,color:"var(--t3)",fontWeight:500}}>{b.views} views</div>
+      </div>
+      {!compact && (
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={e=>{e.stopPropagation();window.open(`https://wa.me/91${b.id}876543210`,"_blank");}} className="btn btn-success" style={{flex:1,padding:"10px 0",borderRadius:10,fontSize:13}}>💬 WhatsApp</button>
+          <button onClick={e=>e.stopPropagation()} className="btn btn-outline" style={{flex:1,padding:"10px 0",borderRadius:10,fontSize:13}}>📞 Call</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════ */
+
+/* ── HOME ── */
+function Home({go, setBiz}) {
+  const [q,setQ]=useState(""); const [aiRes,setAiRes]=useState(""); const [aiLoad,setAiLoad]=useState(false);
+  const [quoteOpen,setQuoteOpen]=useState(false);
+
+  const search=async()=>{
+    if(!q.trim())return; setAiLoad(true); setAiRes("");
+    const r=await callAI(`You are Servora AI, a local services assistant for Pune, India. When user searches for a service, suggest the top 2-3 business types with approximate price ranges in ₹ (Indian Rupees). Be concise, friendly, max 3 sentences.`,q);
+    setAiRes(r); setAiLoad(false);
+  };
+
+  const TICKER=["⚡ 3,241 Verified Businesses in Pune","🤖 AI-Powered Search","💬 Instant WhatsApp Connect","🛡️ AI Fake Review Detection","🌟 Pune's #1 Service Platform","🚀 List Your Business Free"];
+
+  return (
+    <div className="page">
+      {/* HERO */}
+      <div style={{position:"relative",minHeight:"95vh",display:"flex",flexDirection:"column",justifyContent:"flex-end",overflow:"hidden",paddingBottom:32}}>
+        <HeroThree/>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 25% 45%,rgba(34,211,238,0.07) 0%,transparent 55%)",zIndex:1,pointerEvents:"none"}}/>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 80% 20%,rgba(129,140,248,0.09) 0%,transparent 55%)",zIndex:1,pointerEvents:"none"}}/>
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:"50%",background:"linear-gradient(to top,var(--bg) 35%,transparent)",zIndex:1,pointerEvents:"none"}}/>
+        {/* Scan line */}
+        <div style={{position:"absolute",left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(34,211,238,0.2),transparent)",animation:"scanLine 5s linear infinite",zIndex:2,pointerEvents:"none"}}/>
+
+        <div style={{position:"relative",zIndex:2,padding:"0 20px"}}>
+          {/* Live badge */}
+          <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"7px 16px",borderRadius:999,background:"rgba(34,211,238,0.07)",border:"1px solid rgba(34,211,238,0.2)",marginBottom:20}}>
+            <span style={{width:7,height:7,borderRadius:"50%",background:"var(--cyan)",boxShadow:"0 0 8px var(--cyan)",animation:"glow 2s ease infinite",display:"inline-block"}}/>
+            <span style={{fontSize:13,color:"var(--cyan)",fontWeight:600}}>Live in Pune · 3,241 businesses</span>
+          </div>
+
+          <h1 style={{fontSize:"clamp(32px,8vw,56px)",fontWeight:900,lineHeight:1.08,marginBottom:12,fontFamily:"Poppins"}}>
+            Find Trusted<br/><span className="gt">Services in Pune</span><br/>
+            <span style={{fontSize:"clamp(18px,4vw,28px)",fontWeight:400,color:"var(--t2)",WebkitTextFillColor:"var(--t2)"}}>Fast · Verified · Transparent ⚡</span>
+          </h1>
+          <p style={{color:"var(--t2)",fontSize:15,lineHeight:1.7,maxWidth:400,marginBottom:24}}>
+            Discover, compare & instantly connect with Pune's best local service providers — powered by AI.
+          </p>
+
+          {/* Search */}
+          <div className="glass2" style={{borderRadius:18,overflow:"hidden",marginBottom:14,boxShadow:"var(--shadow-cyan)"}}>
+            <div style={{display:"flex",alignItems:"center",padding:"14px 16px",gap:10}}>
+              <span style={{fontSize:18,color:"var(--t3)"}}>🔍</span>
+              <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()}
+                placeholder='Try "cheap AC repair" or "doctor in Baner"'
+                style={{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:15}}/>
+            </div>
+            <div style={{display:"flex",gap:0,borderTop:"1px solid var(--border)"}}>
+              <button onClick={search} className="btn btn-primary" style={{flex:1,padding:"13px",borderRadius:0,fontSize:14,gap:6}}>
+                <span>🤖</span><span>AI Search</span>
+              </button>
+              <button onClick={()=>go("listings")} className="btn btn-ghost" style={{flex:1,padding:"13px",fontSize:14,borderLeft:"1px solid var(--border)"}}>
+                Browse All →
+              </button>
+            </div>
+          </div>
+
+          {/* Quick tags */}
+          <div className="chips">
+            {["AC Repair","Plumber","Doctor","Salon","Tutor","Electrician","Car Wash"].map(t=>(
+              <button key={t} onClick={()=>setQ(t)} className="chip">{t}</button>
+            ))}
+          </div>
+
+          {/* AI result */}
+          {aiLoad && <div style={{marginTop:14,padding:"16px",background:"rgba(34,211,238,0.04)",border:"1px solid rgba(34,211,238,0.15)",borderRadius:14}}><BLoader/></div>}
+          {aiRes && (
+            <div className="a-fadeup" style={{marginTop:14,padding:"16px",background:"rgba(34,211,238,0.04)",border:"1px solid rgba(34,211,238,0.2)",borderRadius:14,fontSize:14,color:"var(--t2)",lineHeight:1.8}}>
+              <span style={{color:"var(--cyan)",fontWeight:700}}>🤖 AI: </span>{aiRes}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* STATS */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,padding:"0 20px 28px"}}>
+        {[["12K+","Users","👥","#22d3ee"],["3.2K+","Businesses","🏪","#818cf8"],["4.8★","Rating","⭐","#fbbf24"]].map(([v,l,i,c])=>(
+          <div key={l} className="glass" style={{padding:"16px 10px",textAlign:"center",borderRadius:16}}>
+            <div style={{fontSize:18,marginBottom:4}}>{i}</div>
+            <div style={{fontWeight:800,fontSize:18,fontFamily:"Poppins",background:`linear-gradient(135deg,${c},${c}88)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{v}</div>
+            <div style={{fontSize:11,color:"var(--t3)",marginTop:2}}>{l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* TICKER */}
+      <div style={{overflow:"hidden",padding:"11px 0",borderTop:"1px solid var(--border)",borderBottom:"1px solid var(--border)",background:"rgba(34,211,238,0.015)",marginBottom:32}}>
+        <div style={{display:"flex",gap:56,whiteSpace:"nowrap",animation:"ticker 24s linear infinite"}}>
+          {[...TICKER,...TICKER].map((t,i)=><span key={i} style={{fontSize:12,color:"var(--t2)"}}>{t}</span>)}
+        </div>
+      </div>
+
+      {/* CATEGORIES */}
+      <div style={{padding:"0 20px 32px"}}>
+        <div className="sec-tag">Browse by Category</div>
+        <div className="sec-h" style={{marginBottom:18}}>What do you need?</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+          {CATS.map((cat,i)=>(
+            <div key={cat.id} onClick={()=>go("listings")} className="card card-hover tap-scale" style={{padding:"16px 8px",textAlign:"center",cursor:"pointer",borderRadius:16,animationDelay:`${i*.04}s`}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=cat.c+"44";e.currentTarget.style.boxShadow=`0 8px 30px ${cat.c}18`;}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.boxShadow="";}}>
+              <div style={{fontSize:26,marginBottom:6}}>{cat.icon}</div>
+              <div style={{fontSize:11,fontWeight:600,color:"var(--t2)",lineHeight:1.3}}>{cat.name}</div>
+              <div style={{fontSize:10,color:"var(--t3)",marginTop:2}}>{cat.count}</div>
+              <div style={{height:2,background:`linear-gradient(90deg,${cat.c},transparent)`,marginTop:10,borderRadius:1}}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* FEATURED */}
+      <div style={{padding:"0 20px 32px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}}>
+          <div><div className="sec-tag">AI Recommended</div><div className="sec-h" style={{fontSize:20}}>Top Businesses</div></div>
+          <button onClick={()=>go("listings")} className="btn btn-outline" style={{padding:"8px 16px",borderRadius:10,fontSize:13}}>All →</button>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {BIZ.slice(0,3).map(b=><BizCard key={b.id} b={b} onClick={()=>{setBiz(b);go("detail");}}/>)}
+        </div>
+      </div>
+
+      {/* AI FEATURES HIGHLIGHT */}
+      <div style={{padding:"0 20px 32px"}}>
+        <div className="sec-tag">Why Servora</div>
+        <div className="sec-h" style={{marginBottom:18}}>Powered by AI</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          {[
+            {icon:"🤖",title:"AI Smart Search",desc:"Understands natural language queries",c:"#22d3ee"},
+            {icon:"🧲",title:"AI Recommendations",desc:"Ranks by rating, price & speed",c:"#818cf8"},
+            {icon:"🛡️",title:"Fake Review Guard",desc:"AI detects & removes spam",c:"#fbbf24"},
+            {icon:"💡",title:"AI Business Coach",desc:"Grow your business with AI tips",c:"#34d399"},
+          ].map(f=>(
+            <div key={f.title} className="card" style={{padding:18,borderRadius:16}}>
+              <div style={{fontSize:28,marginBottom:10}}>{f.icon}</div>
+              <div style={{height:2,width:32,background:f.c,borderRadius:1,marginBottom:10}}/>
+              <div style={{fontWeight:700,fontSize:14,marginBottom:4,fontFamily:"Poppins"}}>{f.title}</div>
+              <div style={{fontSize:12,color:"var(--t2)",lineHeight:1.6}}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* PLANS TEASER */}
+      <div style={{padding:"0 20px 32px"}}>
+        <div className="sec-tag">For Businesses</div>
+        <div className="sec-h" style={{marginBottom:6}}>Grow on Servora</div>
+        <p style={{color:"var(--t2)",fontSize:14,marginBottom:18}}>Plans from Free to Elite. Start getting leads today.</p>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          {PLANS.map(p=>(
+            <div key={p.id} className="card" style={{padding:18,borderRadius:18,border:p.popular?"1.5px solid rgba(129,140,248,0.4)":"1px solid var(--border)",position:"relative",transition:"all 0.25s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=`0 12px 40px ${p.color}18`;}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
+              {p.popular&&<div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(90deg,#818cf8,#22d3ee)",color:"#fff",fontSize:9,padding:"3px 12px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap"}}>POPULAR</div>}
+              <div style={{fontFamily:"Poppins",fontWeight:800,fontSize:16,marginBottom:2}}>{p.name}</div>
+              <div style={{marginBottom:12}}>
+                <span style={{fontSize:22,fontWeight:900,color:p.color}}>₹{p.price===0?"0":p.price.toLocaleString()}</span>
+                <span style={{color:"var(--t3)",fontSize:11}}>/mo</span>
+              </div>
+              {p.features.slice(0,2).map(f=><div key={f} style={{fontSize:11,color:"var(--t2)",marginBottom:5,display:"flex",gap:5}}><span style={{color:p.color}}>✓</span>{f}</div>)}
+            </div>
+          ))}
+        </div>
+        <button onClick={()=>go("login")} className="btn btn-primary" style={{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15,marginTop:14}}>
+          List My Business Free →
+        </button>
+      </div>
+
+      {/* FOOTER */}
+      <div style={{padding:"24px 20px",borderTop:"1px solid var(--border)",textAlign:"center"}}>
+        <div style={{fontFamily:"Poppins",fontWeight:900,fontSize:24,marginBottom:6}} className="gt-cyan">Servora</div>
+        <p style={{color:"var(--t3)",fontSize:12}}>Pune's intelligent local services marketplace</p>
+        <p style={{color:"var(--t3)",fontSize:11,marginTop:4}}>Made with ❤️ in India</p>
+      </div>
+    </div>
+  );
+}
+
+/* ── LISTINGS ── */
+function Listings({go, setBiz}) {
+  const [search,setSearch]=useState(""); const [cat,setCat]=useState("All");
+  const [sort,setSort]=useState("rating"); const [verified,setVerified]=useState(false);
+  const [avail,setAvail]=useState(false); const [sortSheet,setSortSheet]=useState(false);
+
+  const CATS2=["All",...new Set(BIZ.map(b=>b.cat))];
+  const list=BIZ.filter(b=>{
+    if(cat!=="All"&&b.cat!==cat)return false;
+    if(verified&&!b.verified)return false;
+    if(avail&&!b.avail)return false;
+    if(search&&!b.name.toLowerCase().includes(search.toLowerCase())&&!b.cat.toLowerCase().includes(search.toLowerCase()))return false;
+    return true;
+  }).sort((a,b)=>sort==="rating"?b.rating-a.rating:sort==="price"?a.price-b.price:b.reviews-a.reviews);
+
+  return (
+    <div className="page">
+      <div style={{padding:"20px 20px 0",background:"linear-gradient(180deg,rgba(34,211,238,0.03),transparent)"}}>
+        <h1 style={{fontSize:24,fontWeight:800,marginBottom:4,fontFamily:"Poppins"}}>Services in <span className="gt-cyan">Pune</span></h1>
+        <p style={{color:"var(--t2)",fontSize:14,marginBottom:14}}>{list.length} of {BIZ.length} results</p>
+        <div className="glass2" style={{display:"flex",alignItems:"center",padding:"13px 16px",gap:10,borderRadius:14,marginBottom:12}}>
+          <span style={{color:"var(--t3)"}}>🔍</span>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search services..." style={{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:15}}/>
+        </div>
+        <div className="chips" style={{marginBottom:12}}>
+          {CATS2.map(c=><button key={c} onClick={()=>setCat(c)} className={`chip ${cat===c?"on":""}`}>{c}</button>)}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:12,paddingBottom:16,borderBottom:"1px solid var(--border)"}}>
+          {[["verified",verified,setVerified,"✅ Verified"],["avail",avail,setAvail,"🟢 Open"]].map(([k,v,setV,l])=>(
+            <label key={k} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:"var(--t2)"}}>
+              <div className="toggle" style={{background:v?"var(--cyan)":"var(--surface3)"}} onClick={()=>setV(x=>!x)}>
+                <div className="toggle-knob" style={{left:v?22:4}}/>
+              </div>{l}
+            </label>
+          ))}
+          <button onClick={()=>setSortSheet(true)} className="btn btn-outline" style={{marginLeft:"auto",padding:"7px 14px",borderRadius:9,fontSize:12,fontWeight:600}}>Sort ↕</button>
+        </div>
+      </div>
+
+      <div style={{padding:"16px 20px",display:"flex",flexDirection:"column",gap:14}}>
+        {list.length===0
+          ?<div style={{textAlign:"center",padding:60,color:"var(--t3)"}}>
+            <div style={{fontSize:48,marginBottom:12}}>🔍</div>
+            <div style={{fontSize:17,fontWeight:600}}>No results</div>
+            <div style={{fontSize:14,marginTop:6}}>Adjust your filters</div>
+          </div>
+          :list.map(b=><BizCard key={b.id} b={b} onClick={()=>{setBiz(b);go("detail");}}/>)
+        }
+      </div>
+
+      {sortSheet&&(
+        <div className="modal-overlay" onClick={()=>setSortSheet(false)}>
+          <div className="modal-sheet" style={{padding:24}} onClick={e=>e.stopPropagation()}>
+            <div style={{width:36,height:4,borderRadius:2,background:"var(--border2)",margin:"0 auto 20px"}}/>
+            <h3 style={{fontSize:18,fontWeight:700,marginBottom:18}}>Sort By</h3>
+            {[["rating","⭐ Highest Rated"],["price","💰 Lowest Price"],["reviews","💬 Most Reviews"]].map(([v,l])=>(
+              <div key={v} onClick={()=>{setSort(v);setSortSheet(false);}} style={{padding:"15px 16px",borderRadius:12,marginBottom:8,background:sort===v?"rgba(34,211,238,0.08)":"var(--surface)",border:sort===v?"1px solid rgba(34,211,238,0.3)":"1px solid var(--border)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <span style={{fontSize:15,fontWeight:sort===v?700:400,color:sort===v?"var(--cyan)":"var(--t1)"}}>{l}</span>
+                {sort===v&&<span style={{color:"var(--cyan)"}}>✓</span>}
+              </div>
+            ))}
+            <div style={{height:16}}/>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── BUSINESS DETAIL ── */
+function Detail({b,go}) {
+  const [tab,setTab]=useState("about"); const [aiTip,setAiTip]=useState(""); const [aiLoad,setAiLoad]=useState(false);
+  const [quoteOpen,setQuoteOpen]=useState(false); const [quoteSent,setQuoteSent]=useState(false);
+  if(!b)return null;
+
+  const getAI=async()=>{
+    setAiLoad(true);
+    const r=await callAI("You are Servora AI advisor. Given a business profile, give 2-3 quick practical tips: should the user book? Any red flags or green flags? Keep it under 80 words.",
+      `${b.name}, ${b.cat}, ⭐${b.rating} (${b.reviews} reviews), ${b.label}, responds in ${b.resp}, ${b.loc}, Pune`);
+    setAiTip(r); setAiLoad(false);
+  };
+
+  const sendQuote=()=>{ setQuoteOpen(false); setQuoteSent(true); setTimeout(()=>setQuoteSent(false),4000); };
+
+  return (
+    <div className="page">
+      <div style={{position:"relative",padding:"20px 20px 24px",background:`linear-gradient(180deg,${b.color}06,transparent)`}}>
+        <button onClick={()=>go("listings")} className="btn btn-ghost" style={{marginBottom:16,padding:0,fontSize:14,gap:6}}>← Back</button>
+        <div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:16}}>
+          <div style={{width:62,height:62,borderRadius:18,background:`${b.color}15`,border:`1px solid ${b.color}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,flexShrink:0}}>{b.icon}</div>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
+              <span style={{fontWeight:800,fontSize:20,fontFamily:"Poppins"}}>{b.name}</span>
+              {b.verified&&<span>✅</span>}
+            </div>
+            <div style={{fontSize:13,color:"var(--t3)",marginBottom:6}}>{b.cat} · 📍 {b.loc}</div>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+              <Stars r={b.rating}/><span style={{fontWeight:700,fontSize:14}}>{b.rating}</span>
+              <span style={{color:"var(--t3)",fontSize:13}}>({b.reviews})</span>
+              <span style={{color:"var(--t3)"}}>·</span>
+              <Dot on={b.avail}/><span style={{fontSize:13,color:b.avail?"#34d399":"#fb7185"}}>{b.avail?"Available Now":"Busy"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Photos */}
+        <div className="chips" style={{marginBottom:18}}>
+          {b.photos.map((p,i)=>(
+            <div key={i} style={{width:80,height:80,borderRadius:14,background:"var(--surface2)",border:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,flexShrink:0}}>{p}</div>
+          ))}
+          <div style={{width:80,height:80,borderRadius:14,background:"var(--surface)",border:"1px dashed var(--border2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:11,color:"var(--t3)",textAlign:"center",padding:6}}>+12 more</div>
+        </div>
+
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:18}}>
+          <span className="badge b-cyan">{b.badge}</span>
+          <span className="badge b-violet">⚡ {b.resp}</span>
+          {b.verified&&<span className="badge b-green">Verified ✅</span>}
+          <span className="badge b-amber">{b.plan} Plan</span>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+          <button onClick={()=>window.open(`https://wa.me/91${b.id}876543210`,"_blank")} className="btn btn-success" style={{padding:"13px 0",borderRadius:12,fontSize:14}}>💬 WhatsApp</button>
+          <button className="btn btn-outline" style={{padding:"13px 0",borderRadius:12,fontSize:14}}>📞 Call Now</button>
+        </div>
+        <button onClick={()=>setQuoteOpen(true)} className="btn btn-primary" style={{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}}>
+          📋 Request Quote · {b.label}
+        </button>
+        {quoteSent&&<div className="a-fadeup" style={{marginTop:12,padding:"12px 16px",background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.25)",borderRadius:12,textAlign:"center",fontSize:14,color:"var(--green)",fontWeight:600}}>✅ Quote sent! They'll reply on WhatsApp within {b.resp}.</div>}
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:"flex",borderBottom:"1px solid var(--border)"}}>
+        {["about","services","reviews","ai"].map(t=>(
+          <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"13px 0",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--cyan)":"2px solid transparent",color:tab===t?"var(--cyan)":"var(--t3)",cursor:"pointer",fontSize:13,fontWeight:tab===t?700:500,textTransform:"capitalize",transition:"all 0.2s"}}>
+            {t==="ai"?"🤖 AI":t}
+          </button>
+        ))}
+      </div>
+
+      <div style={{padding:"20px 20px 32px"}}>
+        {tab==="about"&&(
+          <div>
+            <div className="card" style={{padding:20,marginBottom:14,borderRadius:16}}>
+              <p style={{color:"var(--t2)",fontSize:14,lineHeight:1.8}}>{b.about}</p>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              {[["📍","Location",b.loc],["⚡","Response",b.resp],["💰","Starting",b.label],["⏰","Hours","9 AM–8 PM"]].map(([ico,l,v])=>(
+                <div key={l} className="card" style={{padding:"14px 16px",borderRadius:14}}>
+                  <div style={{fontSize:20,marginBottom:6}}>{ico}</div>
+                  <div style={{fontSize:11,color:"var(--t3)",marginBottom:2}}>{l}</div>
+                  <div style={{fontWeight:600,fontSize:13}}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {tab==="services"&&(
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {b.services.map(s=>{
+              const [name,price]=s.split(" ₹");
+              return(
+                <div key={s} className="card" style={{padding:"16px 18px",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <div><div style={{fontWeight:600,fontSize:15,marginBottom:2}}>{name}</div><div style={{fontSize:12,color:"var(--t3)"}}>Tap to book</div></div>
+                  <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                    <span style={{fontWeight:800,fontSize:15,color:b.color}}>₹{price}</span>
+                    <button onClick={()=>setQuoteOpen(true)} className="btn" style={{padding:"7px 14px",borderRadius:9,background:`${b.color}15`,border:`1px solid ${b.color}30`,color:b.color,fontSize:12,fontWeight:700}}>Book</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {tab==="reviews"&&(
+          <div>
+            <div className="card" style={{padding:20,borderRadius:16,marginBottom:14,display:"flex",gap:20,alignItems:"center"}}>
+              <div style={{textAlign:"center",flexShrink:0}}>
+                <div style={{fontSize:42,fontWeight:900,color:b.color,lineHeight:1,fontFamily:"Poppins"}}>{b.rating}</div>
+                <Stars r={b.rating}/>
+                <div style={{fontSize:12,color:"var(--t3)",marginTop:4}}>{b.reviews} reviews</div>
+              </div>
+              <div style={{flex:1}}>
+                {[5,4,3,2,1].map(s=>(
+                  <div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                    <span style={{fontSize:12,color:"var(--t3)",width:8}}>{s}</span>
+                    <div className="prog" style={{flex:1}}><div className="prog-fill" style={{width:`${s===5?72:s===4?18:s===3?6:s===2?3:1}%`}}/></div>
+                    <span style={{fontSize:11,color:"var(--t3)",width:28}}>{s===5?"72%":s===4?"18%":s===3?"6%":s===2?"3%":"1%"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {[{u:"Rahul M.",r:5,t:"Absolutely fantastic! Professional and thorough. Already rebooked.",d:"2 days ago"},{u:"Sneha P.",r:4,t:"Good service, minor delay but quality was excellent.",d:"1 week ago"},{u:"Amit K.",r:5,t:"Best in Pune! Super responsive and affordable.",d:"2 weeks ago"}].map(rv=>(
+              <div key={rv.u} className="card" style={{padding:16,borderRadius:14,marginBottom:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                  <div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,#22d3ee,#818cf8)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}}>{rv.u[0]}</div>
+                  <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14}}>{rv.u}</div><div style={{display:"flex",gap:6,alignItems:"center"}}><Stars r={rv.r} size={11}/><span style={{fontSize:11,color:"var(--t3)"}}>{rv.d}</span></div></div>
+                  <span style={{fontSize:11,color:"var(--cyan)"}}>✅ Verified</span>
+                </div>
+                <p style={{color:"var(--t2)",fontSize:14,lineHeight:1.7}}>{rv.t}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {tab==="ai"&&(
+          <div>
+            <div style={{padding:24,background:"rgba(34,211,238,0.04)",border:"1px solid rgba(34,211,238,0.15)",borderRadius:18,marginBottom:16}}>
+              <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12}}>
+                <span style={{fontSize:28}}>🤖</span>
+                <div><div style={{fontWeight:700,fontSize:16,fontFamily:"Poppins"}}>AI Advisor</div><div style={{fontSize:12,color:"var(--cyan)"}}>Powered by Claude AI</div></div>
+              </div>
+              {aiTip?<p style={{color:"var(--t2)",fontSize:14,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiTip}</p>
+              :aiLoad?<div style={{display:"flex",justifyContent:"center",padding:8}}><BLoader/></div>
+              :<button onClick={getAI} className="btn btn-primary" style={{width:"100%",padding:"13px 0",borderRadius:12,fontSize:14}}>🤖 Should I Book This?</button>}
+            </div>
+            {/* Compare */}
+            <div className="card" style={{padding:20,borderRadius:16}}>
+              <h4 style={{fontWeight:700,marginBottom:14,fontSize:15}}>💰 Compare Similar</h4>
+              {BIZ.filter(x=>x.cat===b.cat&&x.id!==b.id).slice(0,2).map(x=>(
+                <div key={x.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,paddingBottom:12,borderBottom:"1px solid var(--border)"}}>
+                  <div style={{fontSize:22}}>{x.icon}</div>
+                  <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{x.name}</div><Stars r={x.rating} size={11}/></div>
+                  <div style={{fontWeight:700,fontSize:14,color:x.price<b.price?"var(--green)":"var(--t2)"}}>{x.label}</div>
+                </div>
+              ))}
+              {BIZ.filter(x=>x.cat===b.cat&&x.id!==b.id).length===0&&<p style={{color:"var(--t3)",fontSize:13}}>No similar services to compare.</p>}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quote sheet */}
+      {quoteOpen&&(
+        <div className="modal-overlay" onClick={()=>setQuoteOpen(false)}>
+          <div className="modal-sheet" style={{padding:24}} onClick={e=>e.stopPropagation()}>
+            <div style={{width:36,height:4,borderRadius:2,background:"var(--border2)",margin:"0 auto 20px"}}/>
+            <h3 style={{fontSize:20,fontWeight:800,marginBottom:4,fontFamily:"Poppins"}}>Request Quote</h3>
+            <p style={{color:"var(--t2)",fontSize:14,marginBottom:20}}>from {b.name}</p>
+            <label className="label">Your Name</label><input className="input" placeholder="Full name" style={{marginBottom:14}}/>
+            <label className="label">Phone Number</label><input className="input" placeholder="10-digit mobile" type="tel" style={{marginBottom:14}}/>
+            <label className="label">Requirement</label>
+            <textarea className="input" rows={3} placeholder="Describe what you need..." style={{resize:"none",marginBottom:20}}/>
+            <button onClick={sendQuote} className="btn btn-primary" style={{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}}>📤 Send Request</button>
+            <div style={{height:16}}/>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── AUTH — PREMIUM SPLIT SCREEN ── */
+function Auth({setUser,go}) {
+  const [step,setStep]=useState("phone"); const [phone,setPhone]=useState(""); const [otp,setOtp]=useState(["","","","","",""]);
+  const [role,setRole]=useState("user"); const [loading,setLoading]=useState(false); const [timer,setTimer]=useState(0);
+  const refs=useRef([]);
+
+  useEffect(()=>{ if(timer>0){const t=setTimeout(()=>setTimer(x=>x-1),1000);return()=>clearTimeout(t);} },[timer]);
+
+  const send=async()=>{ setLoading(true); await new Promise(r=>setTimeout(r,1100)); setLoading(false); setStep("otp"); setTimer(30); };
+  const verify=async()=>{ setLoading(true); await new Promise(r=>setTimeout(r,900));
+    const isAdmin=phone==="9999999999";
+    setUser({name:phone.slice(0,4)+"***",phone,role:isAdmin?"admin":role});
+    go(isAdmin?"admin":role==="business"?"bizDash":"dash"); setLoading(false);
+  };
+  const onOtp=(i,v)=>{ if(!/^\d*$/.test(v))return; const n=[...otp];n[i]=v.slice(-1);setOtp(n); if(v&&i<5)refs.current[i+1]?.focus(); };
+
+  return (
+    <div style={{minHeight:"100vh",display:"flex",overflow:"hidden"}}>
+      {/* LEFT — animated background */}
+      <div className="auth-left" style={{flex:1,position:"relative",background:"#060810",overflow:"hidden",display:"flex",flexDirection:"column",justifyContent:"flex-end",padding:48}}>
+        <HeroThree/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(6,8,16,0.9) 30%,rgba(6,8,16,0.3))",zIndex:1}}/>
+        <div style={{position:"relative",zIndex:2}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"7px 16px",borderRadius:999,background:"rgba(34,211,238,0.1)",border:"1px solid rgba(34,211,238,0.25)",marginBottom:20}}>
+            <span style={{width:7,height:7,borderRadius:"50%",background:"var(--cyan)",display:"inline-block",animation:"glow 2s infinite"}}/>
+            <span style={{fontSize:13,color:"var(--cyan)",fontWeight:600}}>Pune's #1 Platform</span>
+          </div>
+          <h2 style={{fontSize:42,fontWeight:900,lineHeight:1.1,marginBottom:12,fontFamily:"Poppins"}}>Find Trusted<br/><span className="gt">Services in Pune</span><br/><span style={{fontSize:26,fontWeight:400,color:"var(--t2)",WebkitTextFillColor:"var(--t2)"}}>⚡ Fast · Verified · Transparent</span></h2>
+          <p style={{color:"var(--t2)",fontSize:16,lineHeight:1.7,maxWidth:400}}>Join 12,000+ users discovering Pune's best local businesses — powered by AI.</p>
+          <div style={{display:"flex",gap:20,marginTop:28}}>
+            {[["12K+","Users"],["3.2K+","Businesses"],["4.8★","Rating"]].map(([v,l])=>(
+              <div key={l}>
+                <div style={{fontSize:20,fontWeight:800,fontFamily:"Poppins"}} className="gt-cyan">{v}</div>
+                <div style={{fontSize:12,color:"var(--t3)"}}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT — auth form */}
+      <div style={{width:"100%",maxWidth:460,background:"var(--bg2)",display:"flex",flexDirection:"column",justifyContent:"center",padding:"40px 36px",overflowY:"auto"}}>
+        <div style={{marginBottom:36}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:28}}>
+            <div style={{width:38,height:38,borderRadius:11,background:"linear-gradient(135deg,var(--cyan-d),var(--violet-d))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>⚡</div>
+            <span style={{fontWeight:900,fontSize:22,fontFamily:"Poppins"}} className="gt-cyan">Servora</span>
+          </div>
+          <h2 style={{fontSize:26,fontWeight:800,fontFamily:"Poppins",marginBottom:6}}>{step==="phone"?"Welcome back 👋":"Enter OTP 🔐"}</h2>
+          <p style={{color:"var(--t2)",fontSize:14}}>{step==="phone"?"Sign in or create account with your phone":"We sent a 6-digit code to +91 "+phone}</p>
+        </div>
+
+        {step==="phone"?(
+          <div className="a-scalein">
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:24}}>
+              {[["user","👤 Customer"],["business","🏪 Business"]].map(([r,l])=>(
+                <button key={r} onClick={()=>setRole(r)} className="btn" style={{padding:"13px 0",borderRadius:12,background:role===r?"rgba(34,211,238,0.1)":"var(--surface)",border:role===r?"1px solid rgba(34,211,238,0.3)":"1px solid var(--border2)",color:role===r?"var(--cyan)":"var(--t2)",fontWeight:role===r?700:400,fontSize:14,transition:"all 0.2s"}}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <label className="label">Mobile Number</label>
+            <div style={{display:"flex",background:"var(--surface2)",border:"1px solid var(--border2)",borderRadius:12,overflow:"hidden",marginBottom:8}}>
+              <div style={{padding:"14px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--border)",background:"var(--surface3)",flexShrink:0}}>🇮🇳 +91</div>
+              <input value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/,"").slice(0,10))} placeholder="10-digit number" type="tel" style={{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"14px",fontSize:16}}/>
+            </div>
+            <p style={{fontSize:11,color:"var(--t3)",marginBottom:20}}>💡 Use 9999999999 to access Admin demo</p>
+            <button onClick={send} disabled={phone.length!==10||loading} className="btn btn-primary" style={{width:"100%",padding:"15px 0",borderRadius:14,fontSize:16,opacity:phone.length!==10?0.5:1}}>
+              {loading?<><Spinner/> Sending...</>:"Send OTP →"}
+            </button>
+          </div>
+        ):(
+          <div className="a-scalein">
+            <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:28}}>
+              {otp.map((d,i)=>(
+                <input key={i} ref={el=>refs.current[i]=el} value={d} onChange={e=>onOtp(i,e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Backspace"&&!d&&i>0)refs.current[i-1]?.focus();}}
+                  style={{width:46,height:54,textAlign:"center",fontSize:22,fontWeight:700,background:"var(--surface2)",border:`1.5px solid ${d?"var(--cyan)":"var(--border2)"}`,borderRadius:12,outline:"none",color:"var(--t1)",transition:"border 0.2s",boxShadow:d?"0 0 0 3px rgba(34,211,238,0.08)":""}} maxLength={1} type="tel"/>
+              ))}
+            </div>
+            <button onClick={verify} disabled={otp.join("").length!==6||loading} className="btn btn-primary" style={{width:"100%",padding:"15px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:otp.join("").length!==6?0.5:1}}>
+              {loading?<><Spinner/> Verifying...</>:"Verify & Login ✓"}
+            </button>
+            <div style={{textAlign:"center",fontSize:13,color:"var(--t3)",marginBottom:8}}>
+              {timer>0?`Resend in ${timer}s`:<button onClick={()=>{setTimer(30);}} style={{background:"none",border:"none",color:"var(--cyan)",cursor:"pointer",fontSize:13}}>Resend OTP</button>}
+            </div>
+            <button onClick={()=>setStep("phone")} style={{display:"block",margin:"0 auto",background:"none",border:"none",color:"var(--t3)",cursor:"pointer",fontSize:13}}>← Change number</button>
+            <p style={{textAlign:"center",fontSize:11,color:"var(--t3)",marginTop:12}}>Any 6 digits work in demo</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── USER DASHBOARD ── */
+function Dash({user,go}) {
+  const [tab,setTab]=useState("bookings");
+  return(
+    <div className="page" style={{padding:"24px 20px"}}>
+      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:24}}>
+        <div style={{width:54,height:54,borderRadius:18,background:"linear-gradient(135deg,#22d3ee,#818cf8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>👤</div>
+        <div><div style={{fontWeight:800,fontSize:20,fontFamily:"Poppins"}}>My Account</div><div style={{color:"var(--t2)",fontSize:13}}>+91 {user?.phone}</div></div>
+      </div>
+      <div style={{display:"flex",borderBottom:"1px solid var(--border)",marginBottom:20}}>
+        {["bookings","saved","activity"].map(t=>(
+          <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"12px 0",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--cyan)":"2px solid transparent",color:tab===t?"var(--cyan)":"var(--t3)",cursor:"pointer",fontSize:13,fontWeight:600,textTransform:"capitalize"}}>
+            {t}
+          </button>
+        ))}
+      </div>
+      {tab==="bookings"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {[{n:"CleanMate Pro",s:"Upcoming",d:"Tomorrow 10 AM",p:"₹299",c:"var(--violet)"},{n:"Dr. Priya's Dental",s:"Completed",d:"Last Monday",p:"₹800",c:"var(--green)"},{n:"Radiance Beauty",s:"Cancelled",d:"2 weeks ago",p:"₹399",c:"var(--rose)"}].map(b=>(
+            <div key={b.n} className="card" style={{padding:18,borderRadius:16,display:"flex",gap:14,alignItems:"center"}}>
+              <div style={{flex:1}}><div style={{fontWeight:700,fontSize:15,marginBottom:4,fontFamily:"Poppins"}}>{b.n}</div><div style={{color:"var(--t3)",fontSize:13}}>{b.d}</div></div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontWeight:700,fontSize:15,color:b.c,marginBottom:4}}>{b.p}</div>
+                <span className={`badge ${b.s==="Upcoming"?"b-violet":b.s==="Completed"?"b-green":"b-rose"}`}>{b.s}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab==="saved"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>{BIZ.slice(0,2).map(b=><BizCard key={b.id} b={b} compact onClick={()=>{}}/>)}<button onClick={()=>go("listings")} className="btn btn-outline" style={{padding:"13px 0",borderRadius:14,fontSize:14,fontWeight:600}}>Browse More</button></div>}
+      {tab==="activity"&&(
+        <div className="card" style={{padding:20,borderRadius:16}}>
+          {["Viewed CleanMate Pro · 2h ago","Searched 'AC repair' · Yesterday","Booked TutorBridge · 3 days ago","Rated Dr. Priya's 5★ · 1 week ago"].map(a=>(
+            <div key={a} style={{padding:"12px 0",borderBottom:"1px solid var(--border)",fontSize:13,color:"var(--t2)",display:"flex",gap:8}}><span style={{color:"var(--cyan)"}}>›</span>{a}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── BUSINESS DASHBOARD ── */
+function BizDash({user}) {
+  const [tab,setTab]=useState("overview"); const [aiTip,setAiTip]=useState(""); const [aiLoad,setAiLoad]=useState(false);
+  const [razLoading,setRazLoading]=useState(false); const [razDone,setRazDone]=useState(false);
+
+  const getAI=async()=>{
+    setAiLoad(true);
+    const r=await callAI("You are a business growth advisor for local service businesses in India. Give exactly 3 numbered, specific, actionable tips to get more leads on a platform like Servora/JustDial in Pune. Keep it under 120 words total.",
+      "Home cleaning business, Pune. 89 leads/month, 4.8★ rating, 342 reviews, Growth plan ₹999/mo. Want to increase leads and conversions.");
+    setAiTip(r); setAiLoad(false);
+  };
+
+  const payWithRazorpay=async(plan)=>{
+    setRazLoading(true);
+    await new Promise(r=>setTimeout(r,1200));
+    setRazLoading(false); setRazDone(true);
+    setTimeout(()=>setRazDone(false),5000);
+  };
+
+  const STATS=[{l:"Leads/Month",v:89,ch:"+23%",i:"⚡",c:"var(--cyan)"},{l:"Profile Views",v:"1.2K",ch:"+45%",i:"👁️",c:"var(--violet)"},{l:"Conversion",v:"7.2%",ch:"+1.2%",i:"📈",c:"var(--amber)"},{l:"Avg Response",v:"4 min",ch:"-30%",i:"⏱️",c:"var(--green)"}];
+
+  return(
+    <div className="page" style={{padding:"24px 20px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+        <div>
+          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}><span style={{fontWeight:800,fontSize:20,fontFamily:"Poppins"}}>Business Hub</span></div>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}><span className="badge b-cyan">Growth Plan</span><span style={{color:"var(--t3)",fontSize:13}}>CleanMate Pro</span></div>
+        </div>
+        <button onClick={()=>setTab("upgrade")} className="btn btn-primary" style={{padding:"9px 16px",borderRadius:11,fontSize:12}}>⬆️ Upgrade</button>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+        {STATS.map(s=>(
+          <div key={s.l} className="card" style={{padding:16,borderRadius:16,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,right:0,width:60,height:60,background:`radial-gradient(circle at top right,${s.c.replace("var(--","").replace(")","")==="cyan"?"rgba(34,211,238":"rgba(129,140,248"},0.12),transparent)`,pointerEvents:"none"}}/>
+            <div style={{fontSize:22,marginBottom:8}}>{s.i}</div>
+            <div style={{fontWeight:900,fontSize:22,marginBottom:2,fontFamily:"Poppins"}}>{s.v}</div>
+            <div style={{color:"var(--t3)",fontSize:11,marginBottom:4}}>{s.l}</div>
+            <div style={{fontSize:11,color:s.c,fontWeight:700}}>{s.ch}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"flex",borderBottom:"1px solid var(--border)",marginBottom:20,overflowX:"auto"}}>
+        {["overview","leads","profile","ai","upgrade"].map(t=>(
+          <button key={t} onClick={()=>setTab(t)} style={{flexShrink:0,padding:"12px 14px",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--cyan)":"2px solid transparent",color:tab===t?"var(--cyan)":"var(--t3)",cursor:"pointer",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>
+            {t==="ai"?"🤖 AI Coach":t==="upgrade"?"⬆️ Plans":t.charAt(0).toUpperCase()+t.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {tab==="overview"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div className="card" style={{padding:20,borderRadius:16}}>
+            <h4 style={{fontWeight:700,marginBottom:14}}>Recent Leads</h4>
+            {[{n:"Rahul M.",t:"2h ago",s:"new"},{n:"Sneha P.",t:"5h ago",s:"contacted"},{n:"Amit K.",t:"Yesterday",s:"converted"}].map(l=>(
+              <div key={l.n} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+                <div style={{width:36,height:36,borderRadius:"50%",background:"var(--surface3)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,flexShrink:0}}>{l.n[0]}</div>
+                <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14}}>{l.n}</div><div style={{color:"var(--t3)",fontSize:12}}>{l.t}</div></div>
+                <span className={`badge ${l.s==="new"?"b-violet":l.s==="contacted"?"b-amber":"b-green"}`}>{l.s}</span>
+              </div>
+            ))}
+          </div>
+          <div className="card" style={{padding:20,borderRadius:16}}>
+            <h4 style={{fontWeight:700,marginBottom:14}}>Lead Sources</h4>
+            {[["Search",64,"var(--cyan)"],["Browse",21,"var(--violet)"],["AI Pick",15,"var(--amber)"]].map(([s,p,c])=>(
+              <div key={s} style={{marginBottom:14}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:"var(--t2)"}}>{s}</span><span style={{fontWeight:700}}>{p}%</span></div>
+                <div className="prog"><div className="prog-fill" style={{width:`${p}%`,background:c==="var(--violet)"?"linear-gradient(90deg,#818cf8,#6366f1)":c==="var(--amber)"?"linear-gradient(90deg,#fbbf24,#fb923c)":"linear-gradient(90deg,#22d3ee,#06b6d4)"}}/></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab==="leads"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {[{n:"Rahul M.",p:"9876***",d:"Today 2h",s:"new"},{n:"Sneha P.",p:"9765***",d:"Today 5h",s:"contacted"},{n:"Amit K.",p:"9654***",d:"Yesterday",s:"converted"},{n:"Priya S.",p:"9543***",d:"2 days ago",s:"converted"}].map(l=>(
+            <div key={l.n} className="card" style={{padding:16,borderRadius:14}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                <div style={{width:40,height:40,borderRadius:12,background:"var(--surface3)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16}}>{l.n[0]}</div>
+                <div style={{flex:1}}><div style={{fontWeight:600,fontSize:15}}>{l.n}</div><div style={{color:"var(--t3)",fontSize:12}}>{l.p} · {l.d}</div></div>
+                <span className={`badge ${l.s==="new"?"b-violet":l.s==="contacted"?"b-amber":"b-green"}`}>{l.s}</span>
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button className="btn btn-success" style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:13}}>💬 WhatsApp</button>
+                <button className="btn btn-outline" style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:13}}>Mark Done</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="profile"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {[["Business Name","CleanMate Pro"],["Category","Home Cleaning"],["Location","Koregaon Park, Pune"],["WhatsApp","9876543210"],["Price Range","₹299–₹999"]].map(([l,v])=>(
+            <div key={l}><label className="label">{l}</label><input className="input" defaultValue={v}/></div>
+          ))}
+          <div><label className="label">About</label><textarea className="input" rows={4} style={{resize:"none"}} defaultValue={BIZ[0].about}/></div>
+          <button className="btn btn-primary" style={{padding:"14px 0",borderRadius:14,fontSize:15}}>💾 Save Changes</button>
+        </div>
+      )}
+
+      {tab==="ai"&&(
+        <div style={{padding:28,background:"rgba(34,211,238,0.03)",border:"1px solid rgba(34,211,238,0.15)",borderRadius:20}}>
+          <div style={{textAlign:"center",marginBottom:22}}>
+            <div style={{fontSize:48,marginBottom:10}}>🤖</div>
+            <h3 style={{fontWeight:800,fontSize:20,marginBottom:6,fontFamily:"Poppins"}}>AI Business Coach</h3>
+            <p style={{color:"var(--t2)",fontSize:14,lineHeight:1.7}}>Personalized growth strategies powered by Claude AI.</p>
+          </div>
+          {aiTip?<p style={{color:"var(--t2)",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap"}}>{aiTip}</p>
+          :aiLoad?<div style={{display:"flex",justifyContent:"center",padding:8}}><BLoader/></div>
+          :<button onClick={getAI} className="btn btn-primary" style={{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}}>🚀 Get My AI Growth Plan</button>}
+        </div>
+      )}
+
+      {tab==="upgrade"&&(
+        <div>
+          {razDone&&<div className="a-fadeup" style={{marginBottom:16,padding:16,background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.25)",borderRadius:14,textAlign:"center",fontSize:14,color:"var(--green)",fontWeight:600}}>✅ Payment successful! Plan upgraded via Razorpay.</div>}
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {PLANS.map(p=>(
+              <div key={p.id} className="card" style={{padding:22,borderRadius:20,border:p.popular?"1.5px solid rgba(129,140,248,0.4)":"1px solid var(--border)",position:"relative"}}>
+                {p.popular&&<div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(90deg,#818cf8,#22d3ee)",color:"#fff",fontSize:9,padding:"3px 14px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap"}}>MOST POPULAR</div>}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+                  <div>
+                    <div style={{fontFamily:"Poppins",fontWeight:800,fontSize:18}}>{p.name}</div>
+                    <div style={{marginTop:2}}>
+                      <span style={{fontSize:26,fontWeight:900,color:p.color,fontFamily:"Poppins"}}>₹{p.price===0?"0":p.price.toLocaleString()}</span>
+                      <span style={{color:"var(--t3)",fontSize:12}}>/month</span>
+                    </div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:11,color:"var(--t3)"}}>Leads/month</div>
+                    <div style={{fontWeight:800,fontSize:18,color:p.color}}>{p.leads>999?"∞":p.leads}</div>
+                  </div>
+                </div>
+                {p.features.map(f=><div key={f} style={{fontSize:13,color:"var(--t2)",marginBottom:6,display:"flex",gap:7}}><span style={{color:p.color}}>✓</span>{f}</div>)}
+                <button onClick={()=>payWithRazorpay(p)} disabled={razLoading||p.id==="free"} className="btn btn-primary" style={{width:"100%",padding:"12px 0",borderRadius:12,fontSize:14,marginTop:14,opacity:p.id==="free"?0.5:1,background:p.id==="free"?"var(--surface3)":undefined,color:p.id==="free"?"var(--t3)":"white"}}>
+                  {razLoading?<><Spinner/> Processing...</>:p.id==="free"?"Current Plan":"Pay via Razorpay"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── ADMIN DASHBOARD ── */
+function Admin() {
+  const [tab,setTab]=useState("overview"); const [aiMod,setAiMod]=useState(""); const [aiModLoad,setAiModLoad]=useState(false);
+  const [banner,setBanner]=useState("");
+
+  const runMod=async()=>{
+    setAiModLoad(true);
+    const r=await callAI("You are an AI content moderator for a local services platform in India. Analyze reviews for suspicious activity — fake positives, coordinated attacks, spam. Identify suspicious ones with reasons. Keep it under 100 words.",
+      "Reviews:\n1. 'BEST EVER!!!! MUST BOOK!!!' - new account, 0 other reviews\n2. 'AC was repaired well, on time, reasonable price.' - 2yr account, 15 reviews\n3. 'SCAM SCAM SCAM DO NOT USE' - 3 reviews today, same IP as 5 others\n4. 'Good cleaning job, minor issue with bathroom but satisfied.' - 1yr account, 8 reviews");
+    setAiMod(r); setAiModLoad(false);
+  };
+
+  return(
+    <div className="page" style={{padding:"24px 20px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+        <div>
+          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}>
+            <span style={{fontWeight:800,fontSize:20,fontFamily:"Poppins"}}>Admin Center</span>
+            <span className="badge b-rose">SUPER ADMIN</span>
+          </div>
+          <span style={{color:"var(--t3)",fontSize:13}}>Servora · Pune</span>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn btn-outline" style={{padding:"9px 14px",borderRadius:11,fontSize:12,fontWeight:600}}>📢 Banner</button>
+          <button className="btn btn-primary" style={{padding:"9px 16px",borderRadius:11,fontSize:12}}>+ Add Biz</button>
+        </div>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+        {ADMIN_STATS.map(s=>(
+          <div key={s.l} className="card" style={{padding:16,borderRadius:16}}>
+            <div style={{fontSize:22,marginBottom:8}}>{s.i}</div>
+            <div style={{fontWeight:900,fontSize:20,marginBottom:2,fontFamily:"Poppins"}}>{s.v}</div>
+            <div style={{color:"var(--t3)",fontSize:11,marginBottom:4}}>{s.l}</div>
+            <div style={{fontSize:11,color:s.c,fontWeight:700}}>{s.ch}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"flex",borderBottom:"1px solid var(--border)",marginBottom:20,overflowX:"auto"}}>
+        {["overview","businesses","users","subscriptions","ai-mod"].map(t=>(
+          <button key={t} onClick={()=>setTab(t)} style={{flexShrink:0,padding:"12px 12px",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--cyan)":"2px solid transparent",color:tab===t?"var(--cyan)":"var(--t3)",cursor:"pointer",fontSize:12,fontWeight:600,whiteSpace:"nowrap"}}>
+            {t==="ai-mod"?"🛡️ AI Mod":t.charAt(0).toUpperCase()+t.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {tab==="overview"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div className="card" style={{padding:20,borderRadius:16}}>
+            <h4 style={{fontWeight:700,marginBottom:14}}>Pending Approvals</h4>
+            {BIZ.filter(b=>b.status==="pending").map(b=>(
+              <div key={b.id} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 0",borderBottom:"1px solid var(--border)"}}>
+                <div style={{fontSize:24}}>{b.icon}</div>
+                <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14}}>{b.name}</div><div style={{color:"var(--t3)",fontSize:12}}>{b.cat} · {b.loc}</div></div>
+                <div style={{display:"flex",gap:6}}>
+                  <button className="btn btn-success" style={{width:32,height:32,borderRadius:8,padding:0,fontSize:16}}>✓</button>
+                  <button className="btn btn-danger" style={{width:32,height:32,borderRadius:8,padding:0,fontSize:16}}>✕</button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="card" style={{padding:20,borderRadius:16}}>
+            <h4 style={{fontWeight:700,marginBottom:14}}>Revenue by Plan</h4>
+            {PLANS.map(p=>(
+              <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}/>
+                <span style={{flex:1,fontSize:13,color:"var(--t2)"}}>{p.name}</span>
+                <span style={{fontSize:12,color:"var(--t3)"}}>{p.biz||"—"} biz</span>
+                <span style={{fontWeight:700,fontSize:13,color:"var(--green)"}}>{p.id==="free"?"₹0":p.id==="growth"?"₹1.2L":p.id==="pro"?"₹1.2L":"₹6.0L"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab==="businesses"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {BIZ.map(b=>(
+            <div key={b.id} className="card" style={{padding:16,borderRadius:16}}>
+              <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:10}}>
+                <div style={{fontSize:26,flexShrink:0}}>{b.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}><div style={{fontWeight:700,fontSize:15}}>{b.name}</div>{b.verified&&<span style={{fontSize:12}}>✅</span>}</div>
+                  <div style={{color:"var(--t3)",fontSize:12}}>{b.cat} · {b.loc}</div>
+                </div>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <span className={`badge ${b.plan==="Elite"?"b-amber":b.plan==="Pro"?"b-violet":"b-cyan"}`}>{b.plan}</span>
+                  <span className={`badge ${b.status==="approved"?"b-green":"b-amber"}`}>{b.status}</span>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button className="btn btn-outline" style={{flex:1,padding:"8px 0",borderRadius:9,fontSize:12,fontWeight:600}}>Edit</button>
+                <button className="btn btn-warning" style={{flex:1,padding:"8px 0",borderRadius:9,fontSize:12,fontWeight:600}}>✅ Verify</button>
+                <button className="btn btn-danger" style={{flex:1,padding:"8px 0",borderRadius:9,fontSize:12,fontWeight:600}}>Ban</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="users"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {[{n:"Rahul M.",p:"9876***",r:"user",s:"active"},{n:"Sneha P.",p:"9765***",r:"business",s:"active"},{n:"Admin User",p:"9999***",r:"admin",s:"active"},{n:"Spam Bot",p:"1234***",r:"user",s:"blocked"}].map(u=>(
+            <div key={u.n} className="card" style={{padding:16,borderRadius:14,display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:42,height:42,borderRadius:12,background:"linear-gradient(135deg,rgba(34,211,238,0.15),rgba(129,140,248,0.15))",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16}}>{u.n[0]}</div>
+              <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14}}>{u.n}</div><div style={{color:"var(--t3)",fontSize:12}}>{u.p} · <span className={`badge ${u.r==="admin"?"b-amber":u.r==="business"?"b-cyan":"b-green"}`} style={{fontSize:9}}>{u.r}</span></div></div>
+              <button className={`btn ${u.s==="blocked"?"btn-success":"btn-danger"}`} style={{padding:"7px 14px",borderRadius:9,fontSize:12,fontWeight:700}}>
+                {u.s==="blocked"?"Unblock":"Block"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="subscriptions"&&(
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {PLANS.map(p=>(
+            <div key={p.id} className="card" style={{padding:22,borderRadius:18,border:`1px solid ${p.color}25`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+                <div><div style={{fontFamily:"Poppins",fontWeight:800,fontSize:18}}>{p.name}</div><div style={{marginTop:2}}><span style={{fontSize:22,fontWeight:900,color:p.color}}>₹{p.price===0?"0":p.price.toLocaleString()}</span><span style={{color:"var(--t3)",fontSize:11}}>/mo</span></div></div>
+                <div style={{textAlign:"right"}}><div style={{fontSize:11,color:"var(--t3)"}}>Active</div><div style={{fontWeight:800,fontSize:22,color:p.color}}>{p.id==="free"?"2.8K":p.id==="growth"?"120":p.id==="pro"?"48":"12"}</div></div>
+              </div>
+              <div className="prog"><div className="prog-fill" style={{width:`${p.id==="free"?89:p.id==="growth"?37:p.id==="pro"?15:4}%`,background:`linear-gradient(90deg,${p.color},${p.color}88)`}}/></div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="ai-mod"&&(
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+            {[["🚨","Flagged","14","var(--rose)"],["✅","Approved","1.8K","var(--green)"],["🔍","Pending","23","var(--amber)"]].map(([i,l,v,c])=>(
+              <div key={l} style={{padding:"14px 10px",background:`${c}08`,border:`1px solid ${c}25`,borderRadius:14,textAlign:"center"}}>
+                <div style={{fontSize:22}}>{i}</div><div style={{fontWeight:800,fontSize:18,color:c}}>{v}</div><div style={{fontSize:11,color:"var(--t3)"}}>{l}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{padding:24,background:"rgba(251,113,133,0.03)",border:"1px solid rgba(251,113,133,0.15)",borderRadius:18}}>
+            <h4 style={{fontWeight:700,fontSize:16,marginBottom:8,fontFamily:"Poppins"}}>🛡️ AI Review Scanner</h4>
+            <p style={{color:"var(--t2)",fontSize:13,lineHeight:1.7,marginBottom:16}}>Detect fake reviews, spam listings and coordinated negative attacks powered by Claude AI.</p>
+            {aiMod?<p style={{color:"var(--t2)",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap"}}>{aiMod}</p>
+            :aiModLoad?<div style={{display:"flex",justifyContent:"center",padding:8}}><BLoader/></div>
+            :<button onClick={runMod} className="btn btn-primary" style={{width:"100%",padding:"13px 0",borderRadius:12,fontSize:14}}>🛡️ Run AI Moderation Scan</button>}
+          </div>
+
+          {/* Announcement banner */}
+          <div className="card" style={{padding:20,borderRadius:16,marginTop:14}}>
+            <h4 style={{fontWeight:700,fontSize:15,marginBottom:12}}>📢 Broadcast Announcement</h4>
+            <textarea value={banner} onChange={e=>setBanner(e.target.value)} className="input" rows={3} placeholder="Write an announcement for all users..." style={{resize:"none",marginBottom:12}}/>
+            <button className="btn btn-primary" style={{width:"100%",padding:"12px 0",borderRadius:12,fontSize:14}}>📤 Send to All Users</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── AI CHAT ── */
+function AiChat({onClose}) {
+  const [msgs,setMsgs]=useState([{role:"assistant",text:"Hi! 👋 I'm Servora AI — your Pune services guide. I can help you find the best local businesses, compare prices, or answer any questions. What do you need today?"}]);
+  const [inp,setInp]=useState(""); const [loading,setLoading]=useState(false);
+  const bottomRef=useRef(null);
+  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
+
+  const send=async()=>{
+    if(!inp.trim()||loading)return; const text=inp.trim(); setInp(""); setLoading(true);
+    setMsgs(p=>[...p,{role:"user",text}]);
+    const r=await callAI(`You are Servora AI, a local services assistant for Pune, India. Help users find services, compare prices, book appointments. Be concise (max 3 sentences). Use ₹ for prices. Suggest 2-3 options when relevant. End with one short follow-up question.`,text,msgs);
+    setMsgs(p=>[...p,{role:"assistant",text:r}]); setLoading(false);
+  };
+
+  const QUICK=["Best cleaner in Pune?","Doctor near Baner?","Cheapest tutor?","AC repair today?","Salon open now?"];
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:2000,background:"var(--bg)",display:"flex",flexDirection:"column",animation:"scaleIn 0.25s ease"}}>
+      <div style={{padding:"16px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:12,background:"var(--bg2)"}}>
+        <button onClick={onClose} className="btn btn-ghost" style={{padding:0,fontSize:22,lineHeight:1}}>←</button>
+        <div style={{width:42,height:42,borderRadius:13,background:"linear-gradient(135deg,var(--cyan-d),var(--violet-d))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🤖</div>
+        <div>
+          <div style={{fontWeight:700,fontSize:16,fontFamily:"Poppins"}}>Servora AI</div>
+          <div style={{fontSize:12,color:"var(--cyan)",display:"flex",alignItems:"center",gap:5}}>
+            <span style={{width:6,height:6,borderRadius:"50%",background:"var(--cyan)",display:"inline-block",animation:"pulse 2s ease infinite"}}/>Online · Claude AI
+          </div>
+        </div>
+      </div>
+
+      <div style={{flex:1,overflowY:"auto",padding:16,display:"flex",flexDirection:"column",gap:12}}>
+        {msgs.map((m,i)=>(
+          <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",gap:8,alignItems:"flex-end"}}>
+            {m.role==="assistant"&&<div style={{width:32,height:32,borderRadius:10,background:"linear-gradient(135deg,var(--cyan-d),var(--violet-d))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>🤖</div>}
+            <div style={{maxWidth:"80%",padding:"13px 16px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",background:m.role==="user"?"linear-gradient(135deg,var(--cyan-d),var(--violet-d))":"var(--surface2)",fontSize:14,lineHeight:1.75,color:m.role==="user"?"white":"var(--t2)",animation:"fadeUp 0.3s ease"}}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {loading&&<div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
+          <div style={{width:32,height:32,borderRadius:10,background:"linear-gradient(135deg,var(--cyan-d),var(--violet-d))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>🤖</div>
+          <div style={{padding:"14px 18px",borderRadius:"18px 18px 18px 4px",background:"var(--surface2)"}}><BLoader/></div>
+        </div>}
+        <div ref={bottomRef}/>
+      </div>
+
+      {msgs.length<=1&&<div className="chips" style={{padding:"0 16px 12px"}}>
+        {QUICK.map(q=><button key={q} onClick={()=>setInp(q)} className="chip" style={{fontSize:12}}>{q}</button>)}
+      </div>}
+
+      <div style={{padding:"12px 16px",borderTop:"1px solid var(--border)",background:"var(--bg2)",display:"flex",gap:10,alignItems:"flex-end",paddingBottom:"max(12px,env(safe-area-inset-bottom))"}}>
+        <textarea value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Ask about any service in Pune..." rows={1}
+          style={{flex:1,background:"var(--surface2)",border:"1px solid var(--border2)",borderRadius:14,padding:"12px 16px",color:"var(--t1)",fontSize:15,outline:"none",resize:"none",maxHeight:100,lineHeight:1.5}}/>
+        <button onClick={send} disabled={!inp.trim()||loading} className="btn btn-primary" style={{width:46,height:46,borderRadius:14,fontSize:20,flexShrink:0,opacity:!inp.trim()||loading?0.4:1,padding:0}}>↑</button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════ BOTTOM NAV ═══════════════ */
+function BottomNav({page,go,user}) {
+  const items=[
+    {id:"home",icon:"🏠",label:"Home"},
+    {id:"listings",icon:"🔍",label:"Explore"},
+    {id:"chat",icon:"🤖",label:"AI",notif:true},
+    {id:"dashboard",icon:"📋",label:"Dashboard"},
+    {id:"account",icon:"👤",label:user?"Account":"Login"},
+  ];
+  return(
+    <nav className="bottom-nav mobile-only">
+      {items.map(item=>(
+        <button key={item.id} onClick={()=>go(item.id)} className={`nav-btn ${page===item.id?"on":""}`}>
+          <span className="nav-ico" style={{position:"relative"}}>
+            {item.icon}
+            {item.notif&&<span className="notif"/>}
+          </span>
+          <span className="nav-lbl" style={{color:page===item.id?"var(--cyan)":"var(--t3)"}}>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/* ═══════════════ DESKTOP TOPNAV ═══════════════ */
+function TopNav({page,go,user,setUser}) {
+  return(
+    <nav style={{position:"sticky",top:0,zIndex:800,background:"rgba(11,11,15,0.9)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderBottom:"1px solid var(--border)",padding:"13px 28px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div onClick={()=>go("home")} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
+        <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,var(--cyan-d),var(--violet-d))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>⚡</div>
+        <span style={{fontWeight:900,fontSize:20,fontFamily:"Poppins"}} className="gt-cyan">Servora</span>
+        <span style={{fontSize:10,background:"rgba(251,191,36,0.12)",color:"var(--amber)",border:"1px solid rgba(251,191,36,0.25)",borderRadius:5,padding:"2px 7px",fontWeight:700}}>PUNE</span>
+      </div>
+      <div className="desktop-nav" style={{display:"flex",gap:4,alignItems:"center"}}>
+        {["home","listings"].map(p=>(
+          <button key={p} onClick={()=>go(p)} className="btn btn-ghost" style={{padding:"8px 16px",borderRadius:10,fontSize:14,color:page===p?"var(--cyan)":"var(--t2)",background:page===p?"rgba(34,211,238,0.07)":"transparent",fontWeight:page===p?600:400}}>
+            {p.charAt(0).toUpperCase()+p.slice(1)}
+          </button>
+        ))}
+        {user?.role==="admin"&&<button onClick={()=>go("admin")} className="btn btn-warning" style={{padding:"7px 14px",borderRadius:10,fontSize:13,fontWeight:600}}>Admin</button>}
+      </div>
+      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+        <button onClick={()=>go("chat")} className="btn btn-outline" style={{padding:"8px 14px",borderRadius:10,fontSize:13,gap:6}}>🤖 AI Chat</button>
+        {user
+          ?<>
+            <button onClick={()=>go("dashboard")} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,background:"var(--surface)",border:"1px solid var(--border)",cursor:"pointer",color:"var(--t2)",fontSize:13}}>
+              <span style={{width:24,height:24,borderRadius:"50%",background:"linear-gradient(135deg,#22d3ee,#818cf8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>👤</span>
+              {user.name}
+            </button>
+            <button onClick={()=>setUser(null)} className="btn btn-ghost" style={{padding:"7px 12px",borderRadius:10,fontSize:13}}>Logout</button>
+          </>
+          :<button onClick={()=>go("login")} className="btn btn-primary" style={{padding:"9px 22px",borderRadius:12,fontSize:14}}>Login / Sign Up</button>
+        }
+      </div>
+    </nav>
+  );
+}
+
+/* ═══════════════ ROOT APP ═══════════════ */
+export default function App() {
+  const [page,setPage]=useState("home");
+  const [user,setUser]=useState(null);
+  const [selBiz,setSelBiz]=useState(null);
+  const [chatOpen,setChatOpen]=useState(false);
+
+  const go=useCallback((p)=>{
+    if(p==="chat"){setChatOpen(true);return;}
+    if(p==="dashboard")p=user?(user.role==="business"?"bizDash":"dash"):"login";
+    if(p==="account")p=user?(user.role==="business"?"bizDash":"dash"):"login";
+    setPage(p);
+    window.scrollTo({top:0,behavior:"smooth"});
+  },[user]);
+
+  const render=()=>{
+    switch(page){
+      case "home":     return <Home go={go} setBiz={setSelBiz}/>;
+      case "listings": return <Listings go={go} setBiz={setSelBiz}/>;
+      case "detail":   return <Detail b={selBiz} go={go}/>;
+      case "login":    return <Auth setUser={setUser} go={go}/>;
+      case "dash":     return user?<Dash user={user} go={go}/>:<Auth setUser={setUser} go={go}/>;
+      case "bizDash":  return user?<BizDash user={user}/>:<Auth setUser={setUser} go={go}/>;
+      case "admin":    return user?.role==="admin"?<Admin/>:<Auth setUser={setUser} go={go}/>;
+      default:         return <Home go={go} setBiz={setSelBiz}/>;
+    }
+  };
+
+  return(
+    <>
+      <GlobalStyles/>
+      <TopNav page={page} go={go} user={user} setUser={setUser}/>
+      <main>{render()}</main>
+      <BottomNav page={page} go={go} user={user}/>
+      {chatOpen && <AiChat onClose={()=>setChatOpen(false)}/>}
+    </>
+  );
+}
