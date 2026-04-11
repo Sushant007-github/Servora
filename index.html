@@ -104,7 +104,1738 @@ input,select,textarea{font-size:16px!important}
 .ar{width:100%;max-width:500px;background:var(--bg2);display:flex;flex-direction:column;justify-content:center;padding:36px 28px;min-height:100vh;overflow-y:auto}
 .topbar{position:sticky;top:0;z-index:800;background:rgba(11,11,15,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--b1);padding:13px 20px;display:flex;align-items:center;justify-content:space-between}
 @media(min-width:768px){body{padding-bottom:0}.bnav{display:none}.al{display:flex}.ar{padding:60px 56px}}
+
+/* ── PREMIUM ADDITIONS ── */
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes countUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes ringPop{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* Step progress */
+.steps{display:flex;align-items:center;padding:20px 20px 0;gap:0}
+.step-item{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.step-item:not(:last-child)::after{content:"";position:absolute;top:14px;left:60%;width:80%;height:2px;background:var(--b2)}
+.step-item.done:not(:last-child)::after{background:linear-gradient(90deg,var(--c),var(--v))}
+.step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;z-index:1;position:relative;transition:all .3s}
+.step-circle.active{background:linear-gradient(135deg,var(--cd),var(--vd));color:#fff;box-shadow:0 0 16px rgba(34,211,238,.4)}
+.step-circle.done{background:var(--green);color:#fff}
+.step-circle.idle{background:var(--s2);color:var(--t3);border:1px solid var(--b2)}
+.step-label{font-size:10px;color:var(--t3);margin-top:4px;font-weight:600;text-align:center;white-space:nowrap}
+.step-label.active{color:var(--c)}
+
+/* Premium plan cards */
+.plan-card{border-radius:20px;padding:22px;border:1.5px solid var(--b1);position:relative;transition:all .3s;background:var(--s1)}
+.plan-card.popular{border-color:rgba(129,140,248,.5);box-shadow:0 0 30px rgba(129,140,248,.1)}
+.plan-card.selected{border-color:var(--c);box-shadow:0 0 30px rgba(34,211,238,.15);background:rgba(34,211,238,.03)}
+.plan-badge-top{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap;letter-spacing:.5px}
+.plan-price{font-size:36px;font-weight:900;font-family:'Poppins',sans-serif;line-height:1}
+.plan-feature{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b1);font-size:13px;color:var(--t2)}
+.plan-feature:last-child{border-bottom:none}
+.plan-feature .tick{color:var(--green);font-size:14px;flex-shrink:0}
+.plan-feature .cross{color:var(--rose);font-size:14px;flex-shrink:0}
+
+/* Category chips */
+.cat-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--b2);background:var(--s1);font-size:13px;color:var(--t2);cursor:pointer;transition:all .2s;white-space:nowrap}
+.cat-chip.sel{background:rgba(34,211,238,.1);border-color:var(--c);color:var(--c)}
+.cat-chip .rem{font-size:10px;background:rgba(255,255,255,.15);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+.cat-search-wrap{position:relative}
+.cat-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--b2);border-radius:14px;z-index:100;max-height:220px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.cat-opt{padding:14px 16px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px;transition:background .15s}
+.cat-opt:hover{background:var(--s2)}
+.cat-opt:last-child{border-bottom:none}
+
+/* Analytics / stat cards */
+.stat-big{background:var(--s1);border:1px solid var(--b1);border-radius:20px;padding:20px;position:relative;overflow:hidden}
+.stat-big::before{content:"";position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.07}
+.stat-num{font-size:32px;font-weight:900;font-family:'Poppins',sans-serif;line-height:1;animation:countUp .5s ease}
+.stat-trend{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;margin-top:6px}
+.stat-trend.up{background:rgba(52,211,153,.12);color:var(--green)}
+.stat-trend.down{background:rgba(251,113,133,.12);color:var(--rose)}
+
+/* Mini bar chart */
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:48px}
+.bar-col{flex:1;border-radius:4px 4px 0 0;min-height:4px;transition:height .6s ease;position:relative}
+.bar-col:hover .bar-tip{opacity:1}
+.bar-tip{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--b2);border-radius:6px;padding:4px 8px;font-size:10px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+
+/* Notification badge */
+.notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--rose);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);padding:0 3px}
+
+/* Premium table */
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.cmp-table th{padding:10px 8px;text-align:center;font-weight:700;position:sticky;top:0;background:var(--bg2);z-index:2}
+.cmp-table td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--b1)}
+.cmp-table td:first-child{text-align:left;color:var(--t2);font-weight:500}
+.cmp-table tr:hover td{background:var(--s1)}
+
+/* Avatar */
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0}
+
+/* Floating action */
+.fab{position:fixed;bottom:90px;right:20px;z-index:850;width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--cd),var(--vd));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(6,182,212,.4);transition:all .25s;animation:float 3s ease-in-out infinite}
+.fab:active{transform:scale(.92)}
+
+/* Timeline */
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--b1)}
+.tl-item{position:relative;margin-bottom:20px}
+.tl-dot{position:absolute;left:-20px;top:4px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg);flex-shrink:0}
+
+/* Countdown timer */
+.countdown{display:flex;gap:8px;justify-content:center}
+.cd-block{background:rgba(0,0,0,.6);border:1px solid var(--b2);border-radius:10px;padding:8px 12px;text-align:center;min-width:52px}
+.cd-num{font-size:22px;font-weight:900;font-family:'Poppins',sans-serif;color:var(--amber);line-height:1}
+.cd-label{font-size:9px;color:var(--t3);font-weight:700;letter-spacing:.8px;margin-top:2px}
+
+/* Info row */
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--b1)}
+.info-row:last-child{border-bottom:none}
+
+/* Premium search */
+.psearch{background:var(--s2);border:1.5px solid var(--b2);border-radius:14px;display:flex;align-items:center;padding:13px 16px;gap:10px;transition:all .2s}
+.psearch:focus-within{border-color:var(--c);box-shadow:0 0 0 4px rgba(34,211,238,.07)}
+.psearch input{background:transparent;border:none;outline:none;color:var(--t1);font-size:15px;flex:1}
+
+/* Switch toggle */
+.sw{width:48px;height:26px;border-radius:13px;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0;border:none;outline:none}
+.sw-k{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
+/* Pincode lookup */
+.pincode-loader{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c);padding:6px 0}
+
+/* Competitor card */
+.comp-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+
+/* Progress ring */
+.ring-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+
+/* Lead timeline */
+.lead-card{background:var(--s1);border:1px solid var(--b1);border-radius:16px;padding:16px;margin-bottom:12px}
+.lead-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px}
+
+/* Announcement banner */
+.ann-banner{background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(129,140,248,.08));border:1px solid rgba(34,211,238,.2);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start}
 </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/javascript">
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+var useCallback = React.useCallback;
+
+/* =====================
+   CONFIG - EDIT THESE
+   ===================== */
+var SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+var SUPABASE_KEY = "YOUR_ANON_KEY";
+
+/* =====================
+   ADMIN SECRET PHONES
+   Add your real number here.
+   Nobody else can access admin.
+   ===================== */
+var ADMIN_PHONES = ["9999999999"];
+
+/* =====================
+   SUPABASE HELPERS
+   ===================== */
+var SBH = {"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":"return=representation"};
+function sbGet(t,q){return fetch(SUPABASE_URL+"/rest/v1/"+t+(q||""),{headers:SBH}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
+function sbPost(t,d){return fetch(SUPABASE_URL+"/rest/v1/"+t,{method:"POST",headers:SBH,body:JSON.stringify(d)}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
+function sbPatch(t,k,v,d){return fetch(SUPABASE_URL+"/rest/v1/"+t+"?"+k+"=eq."+v,{method:"PATCH",headers:SBH,body:JSON.stringify(d)}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
+
+/* =====================
+   AI ENGINE
+   ===================== */
+function callAI(system,msg,history){
+  var hist=history||[];
+  var messages=hist.map(function(m){return{role:m.role==="assistant"?"assistant":"user",content:m.text};});
+  messages.push({role:"user",content:msg});
+  return fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:500,system:system,messages:messages})
+  }).then(function(r){return r.json();}).then(function(d){return(d.content&&d.content[0]&&d.content[0].text)?d.content[0].text:aiFB(msg);}).catch(function(){return aiFB(msg);});
+}
+function aiFB(q){
+  var l=q?q.toLowerCase():"";
+  if(l.indexOf("clean")>=0)return "CleanMate Pro (4.8 stars, Rs.299/visit) is top-rated for cleaning in Pune. Verified, responds in 5 min.";
+  if(l.indexOf("doctor")>=0||l.indexOf("dental")>=0)return "Dr. Priya Dental (4.9 stars) Viman Nagar. From Rs.500, responds in 10 min.";
+  if(l.indexOf("tutor")>=0)return "TutorBridge Academy (4.9 stars). JEE/NEET at Rs.1200/hr, online and offline.";
+  if(l.indexOf("cheap")>=0||l.indexOf("budget")>=0)return "Budget picks: FixIt Repairs from Rs.149, SpeedoMoto Auto from Rs.249. Both 4.5+ rated.";
+  return "I can help find any service in Pune! Ask about cleaning, doctors, tutors, salons, electricians.";
+}
+
+/* =====================
+   VALIDATION
+   ===================== */
+function vN(v){return v&&v.trim().length>=2;}
+function vE(v){return v&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
+function vP(v){return v&&/^[6-9]\d{9}$/.test(v);}
+function vPW(v){return v&&v.length>=8;}
+function pwSc(pw){var s=0;if(!pw)return 0;if(pw.length>=8)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;return s;}
+
+/* =====================
+   STATIC DATA
+   ===================== */
+var BIZ=[
+  {id:"1",name:"CleanMate Pro",cat:"Home Cleaning",rating:4.8,reviews:342,price:299,label:"Rs.299/visit",badge:"Top Rated",verified:true,avail:true,resp:"5 min",loc:"Koregaon Park",icon:"\uD83C\uDFE0",color:"#22d3ee",about:"Premium home cleaning with eco-friendly products. Trained staff, fully insured. Serving Pune since 2018.",services:["Deep Cleaning - Rs.499","Regular Cleaning - Rs.299","Move-In/Out - Rs.799","Office Cleaning - Rs.999"],photos:["\uD83D\uDECB\uFE0F","\uD83D\uDEB4","\uD83C\uDF73","\uD83E\uDE9F"],views:1240,plan:"pro",status:"approved",phone:"9876543210"},
+  {id:"2",name:"Dr. Priya Dental",cat:"Doctor",rating:4.9,reviews:521,price:500,label:"Rs.500+",badge:"Verified",verified:true,avail:true,resp:"10 min",loc:"Viman Nagar",icon:"\uD83E\uDDB7",color:"#fb7185",about:"Advanced dental care. 15 years experience. All procedures from cleaning to implants.",services:["Cleaning - Rs.500","Whitening - Rs.3000","Braces - Rs.25000","Root Canal - Rs.4500"],photos:["\uD83E\uDDB7","\uD83D\uDC8A","\uD83E\uDE7A","\uD83C\uDFE5"],views:2100,plan:"elite",status:"approved",phone:"9765432109"},
+  {id:"3",name:"Radiance Beauty",cat:"Salon",rating:4.7,reviews:289,price:399,label:"Rs.399+",badge:"Fast Response",verified:true,avail:false,resp:"15 min",loc:"Baner",icon:"\u2702\uFE0F",color:"#f472b6",about:"Premium salon with full beauty and spa services. Hygiene-certified.",services:["Haircut - Rs.399","Facial - Rs.699","Manicure - Rs.299","Full Wax - Rs.999"],photos:["\uD83D\uDC85","\uD83D\uDC86","\u2702\uFE0F","\uD83C\uDF38"],views:890,plan:"growth",status:"approved",phone:"9654321098"},
+  {id:"4",name:"FixIt Tech Repairs",cat:"Electrician",rating:4.6,reviews:198,price:149,label:"Rs.149+",badge:"Fast Response",verified:false,avail:true,resp:"3 min",loc:"Wakad",icon:"\uD83D\uDD27",color:"#34d399",about:"Quick phone, laptop, AC and appliance repair. Doorstep service. Same-day fix guarantee.",services:["Phone Screen - Rs.299","Laptop - Rs.499","AC Service - Rs.399","TV Repair - Rs.599"],photos:["\uD83D\uDCF1","\uD83D\uDCBB","\u2744\uFE0F","\uD83D\uDCFA"],views:670,plan:"growth",status:"approved",phone:"9543210987"},
+  {id:"5",name:"TutorBridge Academy",cat:"Tutor",rating:4.9,reviews:412,price:800,label:"Rs.800/hr",badge:"Top Rated",verified:true,avail:true,resp:"30 min",loc:"Kothrud",icon:"\uD83D\uDCDA",color:"#818cf8",about:"Expert tutors Class 8-12 plus JEE/NEET. 98% students improved. Online and offline.",services:["Maths - Rs.800/hr","Science - Rs.800/hr","JEE Prep - Rs.1200/hr","NEET Prep - Rs.1200/hr"],photos:["\uD83D\uDCDA","\u270F\uFE0F","\uD83D\uDD2C","\uD83E\uDDE0"],views:3200,plan:"pro",status:"approved",phone:"9432109876"},
+  {id:"6",name:"SpeedoMoto Auto",cat:"Car Service",rating:4.5,reviews:167,price:249,label:"Rs.249+",badge:"Verified",verified:true,avail:true,resp:"20 min",loc:"Hinjewadi",icon:"\uD83D\uDE97",color:"#60a5fa",about:"Professional car servicing and detailing at doorstep. All brands, genuine parts.",services:["Car Wash - Rs.249","Oil Change - Rs.799","Tyre - Rs.149","Detailing - Rs.2499"],photos:["\uD83D\uDE97","\uD83D\uDEDE","\uD83D\uDD27","\u2728"],views:540,plan:"growth",status:"approved",phone:"9321098765"}
+];
+var CATS=[
+  {id:1,icon:"\uD83C\uDFE0",name:"Home Cleaning",c:"#22d3ee"},{id:2,icon:"\uD83D\uDD27",name:"Plumber",c:"#818cf8"},
+  {id:3,icon:"\u26A1",name:"Electrician",c:"#fbbf24"},{id:4,icon:"\uD83C\uDFE5",name:"Doctor",c:"#fb7185"},
+  {id:5,icon:"\uD83D\uDC87",name:"Salon",c:"#f472b6"},{id:6,icon:"\uD83D\uDCDA",name:"Tutor",c:"#34d399"},
+  {id:7,icon:"\uD83D\uDE97",name:"Car Service",c:"#60a5fa"},{id:8,icon:"\uD83C\uDF55",name:"Food",c:"#fb923c"},
+  {id:9,icon:"\uD83D\uDC3E",name:"Pet Care",c:"#a78bfa"},{id:10,icon:"\uD83D\uDCF8",name:"Photography",c:"#f59e0b"},
+  {id:11,icon:"\uD83C\uDF89",name:"Events",c:"#ec4899"},{id:12,icon:"\uD83D\uDCBC",name:"Finance",c:"#6366f1"}
+];
+var PLANS=[
+  {id:"free",name:"Free",price:0,color:"#475569",leads:5,features:["5 leads/month","Basic listing","Standard placement"]},
+  {id:"growth",name:"Growth",price:999,color:"#22d3ee",leads:50,features:["50 leads/month","Verified badge","Priority listing","Analytics"]},
+  {id:"pro",name:"Pro",price:2499,color:"#818cf8",leads:200,popular:true,features:["200 leads/month","Featured spotlight","AI Coach","Top 3 placement"]},
+  {id:"elite",name:"Elite",price:4999,color:"#fbbf24",leads:9999,features:["Unlimited leads","Position 1","Dedicated manager","Custom ads"]}
+];
+
+/* =====================
+   MICRO COMPONENTS
+   ===================== */
+function Stars(props){
+  var r=props.r||0,s=props.s||13;
+  return React.createElement("span",{style:{display:"flex",gap:1}},
+    [1,2,3,4,5].map(function(i){return React.createElement("span",{key:i,style:{fontSize:s,color:i<=Math.round(r)?"#fbbf24":"#1e293b"}},"\u2605");})
+  );
+}
+function AvDot(props){return React.createElement("span",{style:{width:7,height:7,borderRadius:"50%",background:props.on?"#34d399":"#fb7185",display:"inline-block",flexShrink:0}});}
+function Spin(){return React.createElement("div",{className:"spinner"});}
+function DL(){return React.createElement("div",{className:"dl"},React.createElement("span",{style:{animationDelay:"0s"}}),React.createElement("span",{style:{animationDelay:"0.15s"}}),React.createElement("span",{style:{animationDelay:"0.3s"}}));}
+function AB(props){
+  var cls=props.type==="ok"?"aok":props.type==="info"?"ainf":"aerr";
+  var icon=props.type==="ok"?"\u2705":props.type==="info"?"\u2139\uFE0F":"\u26A0\uFE0F";
+  return React.createElement("div",{className:"abox "+cls},React.createElement("span",null,icon),React.createElement("span",null,props.children));
+}
+
+/* =====================
+   THREE.JS HERO
+   ===================== */
+function Hero3D(props){
+  var el=useRef(null);
+  useEffect(function(){
+    var div=el.current;if(!div)return;
+    var W=div.clientWidth,H=div.clientHeight;
+    var scene=new THREE.Scene();
+    var cam=new THREE.PerspectiveCamera(65,W/H,0.1,500);cam.position.z=30;
+    var renderer=new THREE.WebGLRenderer({antialias:false,alpha:true});renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));renderer.setClearColor(0,0);div.appendChild(renderer.domElement);
+    var N=props.small?400:650,pos=new Float32Array(N*3),col=new Float32Array(N*3);
+    for(var i=0;i<N;i++){pos[i*3]=(Math.random()-.5)*110;pos[i*3+1]=(Math.random()-.5)*70;pos[i*3+2]=(Math.random()-.5)*55;var t=Math.random();if(t<.45){col[i*3]=.13;col[i*3+1]=.83;col[i*3+2]=.93;}else if(t<.78){col[i*3]=.51;col[i*3+1]=.55;col[i*3+2]=.97;}else{col[i*3]=.98;col[i*3+1]=.75;col[i*3+2]=.14;}}
+    var pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.BufferAttribute(pos,3));pg.setAttribute("color",new THREE.BufferAttribute(col,3));
+    var pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.22,vertexColors:true,transparent:true,opacity:.7}));scene.add(pts);
+    var r1=new THREE.Mesh(new THREE.TorusGeometry(15,.06,6,90),new THREE.MeshBasicMaterial({color:0x22d3ee,wireframe:true,transparent:true,opacity:.1}));
+    var r2=new THREE.Mesh(new THREE.TorusGeometry(22,.05,5,100),new THREE.MeshBasicMaterial({color:0x818cf8,wireframe:true,transparent:true,opacity:.07}));r2.rotation.x=Math.PI/3;
+    var ico=new THREE.Mesh(new THREE.IcosahedronGeometry(5,1),new THREE.MeshBasicMaterial({color:0x22d3ee,wireframe:true,transparent:true,opacity:.12}));ico.position.set(-20,4,-10);
+    scene.add(r1,r2,ico);
+    var mx=0,my=0,ti=0,af;
+    function onM(e){mx=(e.clientX/W-.5)*2;my=-(e.clientY/H-.5)*2;}window.addEventListener("mousemove",onM);
+    function loop(){af=requestAnimationFrame(loop);ti+=.004;pts.rotation.y=ti*.04;pts.rotation.x=ti*.015;r1.rotation.x=ti*.22;r1.rotation.z=ti*.1;r2.rotation.z=-ti*.08;r2.rotation.y=ti*.06;ico.rotation.x=ti*.3;ico.rotation.y=ti*.25;cam.position.x+=(mx*3-cam.position.x)*.025;cam.position.y+=(my*2-cam.position.y)*.025;cam.lookAt(scene.position);renderer.render(scene,cam);}loop();
+    function onR(){var nw=div.clientWidth,nh=div.clientHeight;cam.aspect=nw/nh;cam.updateProjectionMatrix();renderer.setSize(nw,nh);}window.addEventListener("resize",onR);
+    return function(){cancelAnimationFrame(af);window.removeEventListener("mousemove",onM);window.removeEventListener("resize",onR);renderer.dispose();if(div.contains(renderer.domElement))div.removeChild(renderer.domElement);};
+  },[]);
+  return React.createElement("div",{ref:el,style:{position:"absolute",inset:0,zIndex:0}});
+}
+
+/* =====================
+   BUSINESS CARD
+   ===================== */
+function BizCard(props){
+  var b=props.b,compact=props.compact||false,ref=useRef(null);
+  function onMM(e){var el=ref.current;if(!el)return;var rc=el.getBoundingClientRect(),x=(e.clientX-rc.left)/rc.width-.5,y=(e.clientY-rc.top)/rc.height-.5;el.style.transform="perspective(700px) rotateX("+(-y*7)+"deg) rotateY("+(x*7)+"deg) scale(1.02)";}
+  function onML(){var el=ref.current;if(el)el.style.transform="perspective(700px) rotateX(0deg) rotateY(0deg) scale(1)";}
+  function onWA(e){e.stopPropagation();window.open("https://wa.me/91"+b.phone,"_blank");}
+  function onCall(e){e.stopPropagation();window.open("tel:+91"+b.phone);}
+  return React.createElement("div",{ref:ref,onClick:props.onClick,className:"card",onMouseMove:onMM,onMouseLeave:onML,style:{padding:compact?"14px":"20px",cursor:"pointer",position:"relative",overflow:"hidden",borderRadius:20,transition:"all .25s"}},
+    React.createElement("div",{style:{position:"absolute",top:0,right:0,width:90,height:90,background:"radial-gradient(circle at top right,"+b.color+"15,transparent)",pointerEvents:"none"}}),
+    React.createElement("div",{style:{display:"flex",gap:12,alignItems:"flex-start",marginBottom:compact?8:14}},
+      React.createElement("div",{style:{width:compact?46:54,height:compact?46:54,borderRadius:14,background:b.color+"15",border:"1px solid "+b.color+"25",display:"flex",alignItems:"center",justifyContent:"center",fontSize:compact?22:27,flexShrink:0}},b.icon),
+      React.createElement("div",{style:{flex:1,minWidth:0}},
+        React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:3}},
+          React.createElement("span",{style:{fontWeight:700,fontSize:compact?14:15,lineHeight:1.2,fontFamily:"Poppins"}},b.name),
+          b.verified&&React.createElement("span",{style:{fontSize:13}},"\u2705")
+        ),
+        React.createElement("div",{style:{fontSize:12,color:"var(--t3)",marginBottom:5}},b.cat+" \u00B7 \uD83D\uDCCD "+b.loc),
+        React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},React.createElement(Stars,{r:b.rating,s:12}),React.createElement("span",{style:{fontWeight:700,fontSize:13}},b.rating),React.createElement("span",{style:{color:"var(--t3)",fontSize:12}},"("+b.reviews+")"))
+      ),
+      React.createElement("div",{style:{textAlign:"right",flexShrink:0}},
+        React.createElement("div",{style:{fontWeight:800,fontSize:15,color:b.color,fontFamily:"Poppins"}},b.label),
+        React.createElement("div",{style:{display:"flex",alignItems:"center",gap:4,marginTop:4,justifyContent:"flex-end"}},React.createElement(AvDot,{on:b.avail}),React.createElement("span",{style:{fontSize:11,color:b.avail?"#34d399":"#fb7185"}},b.avail?"Open":"Busy"))
+      )
+    ),
+    React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:compact?0:12}},
+      React.createElement("div",{style:{display:"flex",gap:6}},React.createElement("span",{className:"badge bc"},b.badge),React.createElement("span",{style:{fontSize:11,color:"var(--t2)"}},"\u26A1 "+b.resp)),
+      React.createElement("span",{style:{fontSize:11,color:"var(--t3)"}},b.views+" views")
+    ),
+    !compact&&React.createElement("div",{style:{display:"flex",gap:8}},
+      React.createElement("button",{onClick:onWA,className:"btn bs",style:{flex:1,padding:"10px 0",borderRadius:10,fontSize:13}},"\uD83D\uDCAC WhatsApp"),
+      React.createElement("button",{onClick:onCall,className:"btn bo",style:{flex:1,padding:"10px 0",borderRadius:10,fontSize:13}},"\uD83D\uDCDE Call")
+    )
+  );
+}
+
+/* =====================
+   HOME PAGE
+   ===================== */
+function HomePage(props){
+  var go=props.go,setBiz=props.setBiz;
+  var [q,setQ]=useState(""); var [aiRes,setAiRes]=useState(""); var [aiLoad,setAiLoad]=useState(false);
+  var [list,setList]=useState(BIZ);
+  useEffect(function(){sbGet("businesses","?status=eq.approved&order=rating.desc").then(function(d){if(d&&d.length>0)setList(d);});}, []);
+  function doSearch(){if(!q.trim())return;setAiLoad(true);setAiRes("");callAI("You are Servora AI for Pune India local services. Suggest 2-3 services with Rs. price. Max 3 sentences.",q).then(function(r){setAiRes(r);setAiLoad(false);});}
+  var approved=list.filter(function(b){return b.status==="approved";});
+  var TK=["3,241 Verified Businesses","AI Search","Instant WhatsApp","AI Review Guard","Pune #1 Platform","List Free"];
+  return React.createElement("div",{className:"page"},
+    React.createElement("div",{style:{position:"relative",minHeight:"95vh",display:"flex",flexDirection:"column",justifyContent:"flex-end",overflow:"hidden",paddingBottom:32}},
+      React.createElement(Hero3D,null),
+      React.createElement("div",{style:{position:"absolute",inset:0,background:"radial-gradient(ellipse at 25% 45%,rgba(34,211,238,.07) 0%,transparent 55%)",zIndex:1,pointerEvents:"none"}}),
+      React.createElement("div",{style:{position:"absolute",bottom:0,left:0,right:0,height:"50%",background:"linear-gradient(to top,var(--bg) 35%,transparent)",zIndex:1,pointerEvents:"none"}}),
+      React.createElement("div",{style:{position:"relative",zIndex:2,padding:"0 20px"}},
+        React.createElement("div",{style:{display:"inline-flex",alignItems:"center",gap:8,padding:"7px 16px",borderRadius:999,background:"rgba(34,211,238,.07)",border:"1px solid rgba(34,211,238,.2)",marginBottom:20}},
+          React.createElement("span",{style:{width:7,height:7,borderRadius:"50%",background:"var(--c)",animation:"glow 2s ease infinite",display:"inline-block"}}),
+          React.createElement("span",{style:{fontSize:13,color:"var(--c)",fontWeight:600}},"Live in Pune \u00B7 3,241 businesses")
+        ),
+        React.createElement("h1",{style:{fontSize:"clamp(30px,8vw,56px)",fontWeight:900,lineHeight:1.08,marginBottom:12,fontFamily:"Poppins"}},
+          "Find Trusted",React.createElement("br",null),
+          React.createElement("span",{className:"gt"},"Services in Pune"),React.createElement("br",null),
+          React.createElement("span",{style:{fontSize:"clamp(16px,4vw,24px)",fontWeight:400,color:"var(--t2)",WebkitTextFillColor:"var(--t2)"}},"Fast \u00B7 Verified \u00B7 Transparent \u26A1")
+        ),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:15,lineHeight:1.7,maxWidth:400,marginBottom:24}},"Discover, compare and connect with Pune's best service providers, powered by AI."),
+        React.createElement("div",{className:"glass2",style:{borderRadius:18,overflow:"hidden",marginBottom:14}},
+          React.createElement("div",{style:{display:"flex",alignItems:"center",padding:"14px 16px",gap:10}},
+            React.createElement("span",{style:{fontSize:18,color:"var(--t3)"}},"\uD83D\uDD0D"),
+            React.createElement("input",{value:q,onChange:function(e){setQ(e.target.value);},onKeyDown:function(e){if(e.key==="Enter")doSearch();},placeholder:"Try: cheap AC repair or doctor near Baner",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:15}})
+          ),
+          React.createElement("div",{style:{display:"flex",borderTop:"1px solid var(--b1)"}},
+            React.createElement("button",{onClick:doSearch,className:"btn bp",style:{flex:1,padding:"13px",borderRadius:0,fontSize:14}},"\uD83E\uDD16 AI Search"),
+            React.createElement("button",{onClick:function(){go("listings");},className:"btn bg",style:{flex:1,padding:"13px",fontSize:14,borderLeft:"1px solid var(--b1)"}},React.createElement("span",null,"Browse All \u2192"))
+          )
+        ),
+        React.createElement("div",{className:"chips"},["AC Repair","Plumber","Doctor","Salon","Tutor","Electrician"].map(function(t){return React.createElement("button",{key:t,onClick:function(){setQ(t);},className:"chip"},t);})),
+        aiLoad&&React.createElement("div",{style:{marginTop:14,padding:16,background:"rgba(34,211,238,.04)",border:"1px solid rgba(34,211,238,.15)",borderRadius:14}},React.createElement(DL,null)),
+        aiRes&&React.createElement("div",{className:"au",style:{marginTop:14,padding:16,background:"rgba(34,211,238,.04)",border:"1px solid rgba(34,211,238,.2)",borderRadius:14,fontSize:14,color:"var(--t2)",lineHeight:1.8}},React.createElement("span",{style:{color:"var(--c)",fontWeight:700}},"\uD83E\uDD16 AI: "),aiRes)
+      )
+    ),
+    React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,padding:"0 20px 28px"}},
+      [["12K+","Users","\uD83D\uDC65","#22d3ee"],["3.2K+","Biz","\uD83C\uDFEA","#818cf8"],["4.8","Rating","\u2B50","#fbbf24"]].map(function(x){
+        return React.createElement("div",{key:x[1],className:"glass",style:{padding:"16px 10px",textAlign:"center",borderRadius:16}},
+          React.createElement("div",{style:{fontSize:18,marginBottom:4}},x[2]),
+          React.createElement("div",{style:{fontWeight:800,fontSize:18,fontFamily:"Poppins",background:"linear-gradient(135deg,"+x[3]+","+x[3]+"88)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}},x[0]),
+          React.createElement("div",{style:{fontSize:11,color:"var(--t3)",marginTop:2}},x[1])
+        );
+      })
+    ),
+    React.createElement("div",{className:"twrap",style:{marginBottom:32}},
+      React.createElement("div",{className:"tinner"},TK.concat(TK).map(function(t,i){return React.createElement("span",{key:i,style:{fontSize:12,color:"var(--t2)"}},"\u26A1 "+t);}))
+    ),
+    React.createElement("div",{style:{padding:"0 20px 32px"}},
+      React.createElement("div",{style:{fontSize:11,fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase",color:"var(--c)",marginBottom:6}},"Browse by Category"),
+      React.createElement("div",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:18}},"What do you need?"),
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}},
+        CATS.map(function(cat){return React.createElement("div",{key:cat.id,onClick:function(){go("listings");},className:"card",style:{padding:"16px 8px",textAlign:"center",cursor:"pointer",borderRadius:16}},React.createElement("div",{style:{fontSize:26,marginBottom:6}},cat.icon),React.createElement("div",{style:{fontSize:11,fontWeight:600,color:"var(--t2)",lineHeight:1.3}},cat.name),React.createElement("div",{style:{height:2,background:"linear-gradient(90deg,"+cat.c+",transparent)",marginTop:10,borderRadius:1}}));})
+      )
+    ),
+    React.createElement("div",{style:{padding:"0 20px 32px"}},
+      React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}},
+        React.createElement("div",null,React.createElement("div",{style:{fontSize:11,fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase",color:"var(--v)",marginBottom:4}},"AI Recommended"),React.createElement("div",{style:{fontSize:20,fontWeight:800,fontFamily:"Poppins"}},"Top Businesses")),
+        React.createElement("button",{onClick:function(){go("listings");},className:"btn bo",style:{padding:"8px 16px",borderRadius:10,fontSize:13}},"All \u2192")
+      ),
+      React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+        approved.slice(0,3).map(function(b){return React.createElement(BizCard,{key:b.id,b:b,onClick:function(){setBiz(b);go("detail");}});})
+      )
+    ),
+    React.createElement("div",{style:{padding:"0 20px 32px"}},
+      React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(34,211,238,.06),rgba(129,140,248,.06))",border:"1px solid var(--b2)",borderRadius:20,padding:24,textAlign:"center"}},
+        React.createElement("div",{style:{fontSize:36,marginBottom:10}},"\uD83C\uDFEA"),
+        React.createElement("h3",{style:{fontSize:20,fontWeight:800,marginBottom:8,fontFamily:"Poppins"}},"Own a Business?"),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.7,marginBottom:16}},"List free. Get leads from 12,000 plus customers in Pune."),
+        React.createElement("button",{onClick:function(){go("login");},className:"btn bp",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}},"List My Business Free \u2192")
+      )
+    ),
+    React.createElement("div",{style:{padding:"24px 20px",borderTop:"1px solid var(--b1)",textAlign:"center"}},
+      React.createElement("div",{className:"gtc",style:{fontFamily:"Poppins",fontWeight:900,fontSize:24,marginBottom:6}},"Servora"),
+      React.createElement("p",{style:{color:"var(--t3)",fontSize:12}},"Pune AI-powered local services \u00B7 Made in India \uD83C\uDDEE\uD83C\uDDF3")
+    )
+  );
+}
+
+/* =====================
+   LISTINGS PAGE
+   ===================== */
+function ListingsPage(props){
+  var go=props.go,setBiz=props.setBiz;
+  var [search,setSearch]=useState(""); var [cat,setCat]=useState("All"); var [sort,setSort]=useState("rating");
+  var [verified,setVerified]=useState(false); var [avail,setAvail]=useState(false); var [sortSheet,setSortSheet]=useState(false);
+  var [list,setList]=useState(BIZ); var [loading,setLoading]=useState(true);
+  useEffect(function(){setLoading(true);sbGet("businesses","?status=eq.approved&order=rating.desc").then(function(d){setList(d&&d.length>0?d:BIZ);setLoading(false);}).catch(function(){setList(BIZ);setLoading(false);});}, []);
+  var cats=["All"].concat(list.reduce(function(a,b){if(a.indexOf(b.cat)<0)a.push(b.cat);return a;},[]));
+  var filtered=list.filter(function(b){
+    if(cat!=="All"&&b.cat!==cat)return false;
+    if(verified&&!b.verified)return false;
+    if(avail&&!b.avail)return false;
+    if(search){var sl=search.toLowerCase();if(b.name.toLowerCase().indexOf(sl)<0&&b.cat.toLowerCase().indexOf(sl)<0)return false;}
+    return true;
+  }).sort(function(a,b){return sort==="rating"?b.rating-a.rating:sort==="price"?a.price-b.price:b.reviews-a.reviews;});
+  return React.createElement("div",{className:"page"},
+    React.createElement("div",{style:{padding:"20px 20px 0",background:"linear-gradient(180deg,rgba(34,211,238,.03),transparent)"}},
+      React.createElement("h1",{style:{fontSize:24,fontWeight:800,marginBottom:4,fontFamily:"Poppins"}},"Services in ",React.createElement("span",{className:"gtc"},"Pune")),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:14}},filtered.length+" results"),
+      React.createElement("div",{className:"glass2",style:{display:"flex",alignItems:"center",padding:"13px 16px",gap:10,borderRadius:14,marginBottom:12}},
+        React.createElement("span",{style:{color:"var(--t3)"}},"\uD83D\uDD0D"),
+        React.createElement("input",{value:search,onChange:function(e){setSearch(e.target.value);},placeholder:"Search services...",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:15}})
+      ),
+      React.createElement("div",{className:"chips",style:{marginBottom:12}},
+        cats.map(function(c){return React.createElement("button",{key:c,onClick:function(){setCat(c);},className:"chip"+(cat===c?" on":"")},c);})
+      ),
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:12,paddingBottom:16,borderBottom:"1px solid var(--b1)"}},
+        React.createElement("label",{style:{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:"var(--t2)"}},
+          React.createElement("div",{className:"toggle",style:{background:verified?"var(--c)":"var(--s3)"},onClick:function(){setVerified(function(v){return !v;});}},React.createElement("div",{className:"tk",style:{left:verified?22:4}})),"\u2705 Verified"
+        ),
+        React.createElement("label",{style:{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:"var(--t2)"}},
+          React.createElement("div",{className:"toggle",style:{background:avail?"var(--green)":"var(--s3)"},onClick:function(){setAvail(function(v){return !v;});}},React.createElement("div",{className:"tk",style:{left:avail?22:4}})),"\uD83D\uDFE2 Open"
+        ),
+        React.createElement("button",{onClick:function(){setSortSheet(true);},className:"btn bo",style:{marginLeft:"auto",padding:"7px 14px",borderRadius:9,fontSize:12,fontWeight:600}},"Sort \u21D5")
+      )
+    ),
+    React.createElement("div",{style:{padding:"16px 20px",display:"flex",flexDirection:"column",gap:14}},
+      loading?[1,2,3].map(function(i){return React.createElement("div",{key:i,className:"card",style:{padding:20,borderRadius:20,height:120}},React.createElement("div",{className:"skel",style:{height:80,borderRadius:10}}));}):
+      filtered.length===0?React.createElement("div",{style:{textAlign:"center",padding:60,color:"var(--t3)"}},React.createElement("div",{style:{fontSize:48,marginBottom:12}},"\uD83D\uDD0D"),React.createElement("div",{style:{fontSize:17,fontWeight:600}},"No results")):
+      filtered.map(function(b){return React.createElement(BizCard,{key:b.id,b:b,onClick:function(){setBiz(b);go("detail");}});})
+    ),
+    sortSheet&&React.createElement("div",{className:"moverlay",onClick:function(){setSortSheet(false);}},
+      React.createElement("div",{className:"msheet",style:{padding:24},onClick:function(e){e.stopPropagation();}},
+        React.createElement("div",{style:{width:36,height:4,borderRadius:2,background:"var(--b2)",margin:"0 auto 20px"}}),
+        React.createElement("h3",{style:{fontSize:18,fontWeight:700,marginBottom:18}},"Sort By"),
+        [["rating","\u2B50 Highest Rated"],["price","\uD83D\uDCB0 Lowest Price"],["reviews","\uD83D\uDCAC Most Reviews"]].map(function(x){
+          return React.createElement("div",{key:x[0],onClick:function(){setSort(x[0]);setSortSheet(false);},style:{padding:"15px 16px",borderRadius:12,marginBottom:8,background:sort===x[0]?"rgba(34,211,238,.08)":"var(--s1)",border:sort===x[0]?"1px solid rgba(34,211,238,.3)":"1px solid var(--b1)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}},
+            React.createElement("span",{style:{fontSize:15,fontWeight:sort===x[0]?700:400,color:sort===x[0]?"var(--c)":"var(--t1)"}},x[1]),sort===x[0]&&React.createElement("span",{style:{color:"var(--c)"}},"✓")
+          );
+        }),
+        React.createElement("div",{style:{height:16}})
+      )
+    )
+  );
+}
+
+/* =====================
+   BUSINESS DETAIL
+   ===================== */
+function DetailPage(props){
+  var b=props.b,go=props.go;
+  var [tab,setTab]=useState("about"); var [aiTip,setAiTip]=useState(""); var [aiLoad,setAiLoad]=useState(false);
+  var [qOpen,setQOpen]=useState(false); var [qSent,setQSent]=useState(false);
+  var [qN,setQN]=useState(""); var [qP,setQP]=useState(""); var [qM,setQM]=useState("");
+  if(!b)return null;
+  useEffect(function(){if(b.id)sbPatch("businesses","id",b.id,{views:(b.views||0)+1});}, [b.id]);
+  function doAI(){setAiLoad(true);callAI("Give 2 quick tips in under 60 words: should user book this?",b.name+", "+b.cat+", "+b.rating+" stars, "+b.label+", responds in "+b.resp+", "+b.loc+" Pune").then(function(r){setAiTip(r);setAiLoad(false);});}
+  function doQuote(){if(!qN||!qP)return;sbPost("leads",{business_id:b.id,customer_name:qN,customer_phone:qP,message:qM,status:"new"});setQOpen(false);setQN("");setQP("");setQM("");setQSent(true);setTimeout(function(){setQSent(false);},5000);}
+  var REVS=[{u:"Rahul M.",r:5,t:"Absolutely fantastic! Professional and thorough.",d:"2 days ago"},{u:"Sneha P.",r:4,t:"Good service, minor delay but quality was excellent.",d:"1 week ago"},{u:"Amit K.",r:5,t:"Best in Pune! Super responsive and affordable.",d:"2 weeks ago"}];
+  return React.createElement("div",{className:"page"},
+    React.createElement("div",{style:{position:"relative",padding:"20px 20px 24px",background:"linear-gradient(180deg,"+b.color+"06,transparent)"}},
+      React.createElement("button",{onClick:function(){go("listings");},className:"btn bg",style:{padding:0,fontSize:14,marginBottom:16}},"\u2190 Back"),
+      React.createElement("div",{style:{display:"flex",gap:14,alignItems:"flex-start",marginBottom:16}},
+        React.createElement("div",{style:{width:62,height:62,borderRadius:18,background:b.color+"15",border:"1px solid "+b.color+"25",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,flexShrink:0}},b.icon),
+        React.createElement("div",{style:{flex:1}},
+          React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}},React.createElement("span",{style:{fontWeight:800,fontSize:20,fontFamily:"Poppins"}},b.name),b.verified&&React.createElement("span",null,"\u2705")),
+          React.createElement("div",{style:{fontSize:13,color:"var(--t3)",marginBottom:6}},b.cat+" \u00B7 \uD83D\uDCCD "+b.loc),
+          React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}},React.createElement(Stars,{r:b.rating}),React.createElement("span",{style:{fontWeight:700,fontSize:14}},b.rating),React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"("+b.reviews+")"),React.createElement("span",{style:{color:"var(--t3)"}},"·"),React.createElement(AvDot,{on:b.avail}),React.createElement("span",{style:{fontSize:13,color:b.avail?"#34d399":"#fb7185"}},b.avail?"Available":"Busy"))
+        )
+      ),
+      React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:18}},React.createElement("span",{className:"badge bc"},b.badge),React.createElement("span",{className:"badge bv"},"\u26A1 "+b.resp),b.verified&&React.createElement("span",{className:"badge bg2"},"Verified \u2705")),
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}},
+        React.createElement("button",{onClick:function(){window.open("https://wa.me/91"+b.phone,"_blank");},className:"btn bs",style:{padding:"13px 0",borderRadius:12,fontSize:14}},"\uD83D\uDCAC WhatsApp"),
+        React.createElement("button",{onClick:function(){window.open("tel:+91"+b.phone);},className:"btn bo",style:{padding:"13px 0",borderRadius:12,fontSize:14}},"\uD83D\uDCDE Call Now")
+      ),
+      React.createElement("button",{onClick:function(){setQOpen(true);},className:"btn bp",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}},"\uD83D\uDCCB Request Quote \u00B7 "+b.label),
+      qSent&&React.createElement("div",{className:"au",style:{marginTop:12,padding:"12px 16px",background:"rgba(52,211,153,.08)",border:"1px solid rgba(52,211,153,.25)",borderRadius:12,textAlign:"center",fontSize:14,color:"var(--green)",fontWeight:600}},"\u2705 Quote sent! They'll respond within "+b.resp+".")
+    ),
+    React.createElement("div",{style:{display:"flex",borderBottom:"1px solid var(--b1)"}},
+      ["about","services","reviews","ai"].map(function(t){return React.createElement("button",{key:t,onClick:function(){setTab(t);},style:{flex:1,padding:"13px 0",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--c)":"2px solid transparent",color:tab===t?"var(--c)":"var(--t3)",cursor:"pointer",fontSize:13,fontWeight:tab===t?700:500,textTransform:"capitalize"}},t==="ai"?"\uD83E\uDD16 AI":t);})
+    ),
+    React.createElement("div",{style:{padding:"20px 20px 32px"}},
+      tab==="about"&&React.createElement("div",null,
+        React.createElement("div",{className:"card",style:{padding:20,marginBottom:14,borderRadius:16}},React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.8}},b.about)),
+        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+          [["\uD83D\uDCCD","Location",b.loc],["\u26A1","Response",b.resp],["\uD83D\uDCB0","Starting",b.label],["\u23F0","Hours","9 AM - 8 PM"]].map(function(x){return React.createElement("div",{key:x[1],className:"card",style:{padding:"14px 16px",borderRadius:14}},React.createElement("div",{style:{fontSize:20,marginBottom:6}},x[0]),React.createElement("div",{style:{fontSize:11,color:"var(--t3)",marginBottom:2}},x[1]),React.createElement("div",{style:{fontWeight:600,fontSize:13}},x[2]));})
+        )
+      ),
+      tab==="services"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:10}},
+        (b.services||[]).map(function(s){
+          var parts=s.split(" - "),n=parts[0],p=parts[1];
+          return React.createElement("div",{key:s,className:"card",style:{padding:"16px 18px",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"space-between"}},
+            React.createElement("div",null,React.createElement("div",{style:{fontWeight:600,fontSize:15,marginBottom:2}},n),React.createElement("div",{style:{fontSize:12,color:"var(--t3)"}},"Tap to enquire")),
+            React.createElement("div",{style:{display:"flex",gap:10,alignItems:"center"}},p&&React.createElement("span",{style:{fontWeight:800,fontSize:15,color:b.color}},p),React.createElement("button",{onClick:function(){setQOpen(true);},className:"btn",style:{padding:"7px 14px",borderRadius:9,background:b.color+"15",border:"1px solid "+b.color+"30",color:b.color,fontSize:12,fontWeight:700}},"Book"))
+          );
+        })
+      ),
+      tab==="reviews"&&React.createElement("div",null,
+        React.createElement("div",{className:"card",style:{padding:20,borderRadius:16,marginBottom:14,display:"flex",gap:20,alignItems:"center"}},
+          React.createElement("div",{style:{textAlign:"center",flexShrink:0}},React.createElement("div",{style:{fontSize:42,fontWeight:900,color:b.color,lineHeight:1,fontFamily:"Poppins"}},b.rating),React.createElement(Stars,{r:b.rating}),React.createElement("div",{style:{fontSize:12,color:"var(--t3)",marginTop:4}},b.reviews+" reviews")),
+          React.createElement("div",{style:{flex:1}},[5,4,3,2,1].map(function(s){var pct=s===5?"72%":s===4?"18%":s===3?"6%":s===2?"3%":"1%";return React.createElement("div",{key:s,style:{display:"flex",alignItems:"center",gap:8,marginBottom:6}},React.createElement("span",{style:{fontSize:12,color:"var(--t3)",width:8}},s),React.createElement("div",{className:"prog",style:{flex:1}},React.createElement("div",{className:"pf",style:{width:pct}})),React.createElement("span",{style:{fontSize:11,color:"var(--t3)",width:28}},pct));}))
+        ),
+        REVS.map(function(rv){return React.createElement("div",{key:rv.u,className:"card",style:{padding:16,borderRadius:14,marginBottom:12}},React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:10}},React.createElement("div",{style:{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,#22d3ee,#818cf8)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}},rv.u[0]),React.createElement("div",{style:{flex:1}},React.createElement("div",{style:{fontWeight:600,fontSize:14}},rv.u),React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},React.createElement(Stars,{r:rv.r,s:11}),React.createElement("span",{style:{fontSize:11,color:"var(--t3)"}},rv.d))),React.createElement("span",{style:{fontSize:11,color:"var(--c)"}},"✅")),React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.7}},rv.t));})
+      ),
+      tab==="ai"&&React.createElement("div",{style:{padding:24,background:"rgba(34,211,238,.04)",border:"1px solid rgba(34,211,238,.15)",borderRadius:18}},
+        React.createElement("div",{style:{display:"flex",gap:10,alignItems:"center",marginBottom:12}},React.createElement("span",{style:{fontSize:28}},"\uD83E\uDD16"),React.createElement("div",null,React.createElement("div",{style:{fontWeight:700,fontSize:16,fontFamily:"Poppins"}},"AI Advisor"),React.createElement("div",{style:{fontSize:12,color:"var(--c)"}},"Powered by Claude AI"))),
+        aiTip?React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.8}},aiTip):
+        aiLoad?React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:8}},React.createElement(DL,null)):
+        React.createElement("button",{onClick:doAI,className:"btn bp",style:{width:"100%",padding:"13px 0",borderRadius:12,fontSize:14}},"\uD83E\uDD16 Should I Book This?")
+      )
+    ),
+    qOpen&&React.createElement("div",{className:"moverlay",onClick:function(){setQOpen(false);}},
+      React.createElement("div",{className:"msheet",style:{padding:24},onClick:function(e){e.stopPropagation();}},
+        React.createElement("div",{style:{width:36,height:4,borderRadius:2,background:"var(--b2)",margin:"0 auto 20px"}}),
+        React.createElement("h3",{style:{fontSize:20,fontWeight:800,marginBottom:4,fontFamily:"Poppins"}},"Request a Quote"),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:20}},"from "+b.name),
+        React.createElement("label",{className:"lbl"},"Your Name *"),React.createElement("input",{value:qN,onChange:function(e){setQN(e.target.value);},className:"field",placeholder:"Full name",style:{marginBottom:14}}),
+        React.createElement("label",{className:"lbl"},"Phone *"),React.createElement("input",{value:qP,onChange:function(e){setQP(e.target.value.replace(/\D/g,"").slice(0,10));},className:"field",placeholder:"10-digit mobile",type:"tel",style:{marginBottom:14}}),
+        React.createElement("label",{className:"lbl"},"Requirement"),React.createElement("textarea",{value:qM,onChange:function(e){setQM(e.target.value);},className:"field",rows:3,placeholder:"Describe what you need...",style:{marginBottom:20,resize:"none"}}),
+        React.createElement("button",{onClick:doQuote,disabled:!qN||!qP,className:"btn bp",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15,opacity:(!qN||!qP)?0.5:1}},"\uD83D\uDCE4 Send Request"),
+        React.createElement("div",{style:{height:16}})
+      )
+    )
+  );
+}
+
+/* =====================
+   AUTH PAGE
+   ===================== */
+function AuthPage(props){
+  var [mode,setMode]=useState("login");
+  return React.createElement("div",{className:"aw"},
+    React.createElement("div",{className:"al"},
+      React.createElement(Hero3D,{small:true}),
+      React.createElement("div",{style:{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(6,8,16,.95) 25%,rgba(6,8,16,.3))",zIndex:1}}),
+      React.createElement("div",{style:{position:"relative",zIndex:2}},
+        React.createElement("div",{style:{display:"inline-flex",alignItems:"center",gap:8,padding:"7px 16px",borderRadius:999,background:"rgba(34,211,238,.1)",border:"1px solid rgba(34,211,238,.25)",marginBottom:24}},React.createElement("span",{style:{width:7,height:7,borderRadius:"50%",background:"var(--c)",display:"inline-block",animation:"glow 2s infinite"}}),React.createElement("span",{style:{fontSize:13,color:"var(--c)",fontWeight:600}},"Pune's #1 Service Platform")),
+        React.createElement("h2",{style:{fontSize:40,fontWeight:900,lineHeight:1.1,marginBottom:14,fontFamily:"Poppins"}},"Find Trusted",React.createElement("br",null),React.createElement("span",{className:"gt"},"Services in Pune")),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:15,lineHeight:1.7,marginBottom:28}},"Fast \u00B7 Verified \u00B7 Transparent"),
+        React.createElement("div",{style:{display:"flex",gap:28}},[["12K+","Users"],["3.2K+","Businesses"],["4.8","Rating"]].map(function(x){return React.createElement("div",{key:x[1]},React.createElement("div",{className:"gtc",style:{fontSize:22,fontWeight:800,fontFamily:"Poppins"}},x[0]),React.createElement("div",{style:{fontSize:12,color:"var(--t3)"}},x[1]));}))
+      )
+    ),
+    React.createElement("div",{className:"ar"},
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:32}},React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,var(--cd),var(--vd))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}},"\u26A1"),React.createElement("span",{className:"gtc",style:{fontWeight:900,fontSize:22,fontFamily:"Poppins"}},"Servora")),
+      mode==="signup"?React.createElement(SignupFlow,{setUser:props.setUser,go:props.go,sw:function(){setMode("login");}}):React.createElement(LoginFlow,{setUser:props.setUser,go:props.go,sw:function(){setMode("signup");}})
+    )
+  );
+}
+
+function SignupFlow(props){
+  var [step,setStep]=useState(1); var [role,setRole]=useState("user");
+  var [nm,setNm]=useState(""); var [em,setEm]=useState(""); var [ph,setPh]=useState(""); var [pw,setPw]=useState(""); var [co,setCo]=useState("");
+  var [errs,setErrs]=useState({}); var [loading,setLoading]=useState(false); var [al,setAl]=useState(null);
+  var [eOtp,setEOtp]=useState(["","","","","",""]); var [pOtp,setPOtp]=useState(["","","","","",""]);
+  var [timer,setTimer]=useState(0);
+  var eRefs=useRef([]); var pRefs=useRef([]);
+  useEffect(function(){if(timer<=0)return;var t=setTimeout(function(){setTimer(function(x){return x-1;});},1000);return function(){clearTimeout(t);};},[timer]);
+  var psc=pwSc(pw);
+  var pwC=["#334155","#fb7185","#fbbf24","#22d3ee","#34d399"];
+  var pwL=["","Weak","Fair","Good","Strong"];
+  function doS1(){
+    var e={};
+    if(!vN(nm))e.nm="Name must be at least 2 characters";
+    if(!vE(em))e.em="Enter a valid email address";
+    if(!vP(ph))e.ph="Enter a valid 10-digit number";
+    if(!vPW(pw))e.pw="Password must be at least 8 characters";
+    if(pw!==co)e.co="Passwords do not match";
+    setErrs(e);if(Object.keys(e).length>0)return;
+    setLoading(true);setAl(null);
+    Promise.all([sbGet("users","?email=eq."+encodeURIComponent(em)),sbGet("users","?phone=eq."+ph)]).then(function(r){
+      if(r[0]&&r[0].length>0){setErrs({em:"This email is already registered"});setLoading(false);return;}
+      if(r[1]&&r[1].length>0){setErrs({ph:"This phone number is already registered"});setLoading(false);return;}
+      setTimeout(function(){setLoading(false);setStep(2);setTimer(60);setAl({type:"info",msg:"Verification code sent to "+em});},800);
+    }).catch(function(){setLoading(false);setAl({type:"err",msg:"Something went wrong. Try again."});});
+  }
+  function doVE(){if(eOtp.join("").length!==6)return;setLoading(true);setTimeout(function(){setLoading(false);setStep(3);setTimer(60);setAl({type:"info",msg:"SMS code sent to +91 "+ph});},800);}
+  function doVP(){
+    if(pOtp.join("").length!==6)return;
+    setLoading(true);
+    var isAdmin=ADMIN_PHONES.indexOf(ph)>=0;
+    var userRole=isAdmin?"admin":role;
+    sbPost("users",{name:nm.trim(),email:em.toLowerCase().trim(),phone:ph,role:userRole,email_verified:true,phone_verified:true}).then(function(d){
+      var u=(d&&d[0])||{name:nm,email:em,phone:ph,role:userRole};
+      props.setUser(u);setLoading(false);
+      if(isAdmin)props.go("admin");else if(userRole==="business")props.go("bizDash");else props.go("dash");
+    });
+  }
+  function onEO(i,v){if(!/^\d*$/.test(v))return;var n=eOtp.slice();n[i]=v.slice(-1);setEOtp(n);if(v&&i<5&&eRefs.current[i+1])eRefs.current[i+1].focus();}
+  function onEK(i,e){if(e.key==="Backspace"&&!eOtp[i]&&i>0&&eRefs.current[i-1])eRefs.current[i-1].focus();}
+  function onPO(i,v){if(!/^\d*$/.test(v))return;var n=pOtp.slice();n[i]=v.slice(-1);setPOtp(n);if(v&&i<5&&pRefs.current[i+1])pRefs.current[i+1].focus();}
+  function onPK(i,e){if(e.key==="Backspace"&&!pOtp[i]&&i>0&&pRefs.current[i-1])pRefs.current[i-1].focus();}
+  var heads=["Create Account","Verify Email","Verify Phone"];
+  return React.createElement("div",null,
+    React.createElement("h2",{style:{fontSize:26,fontWeight:800,fontFamily:"Poppins",marginBottom:6}},heads[step-1]),
+    React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.6,marginBottom:24}},step===1?"Join Servora to find trusted services in Pune":step===2?"Enter the 6-digit code sent to "+em:"Enter the 6-digit SMS code sent to +91 "+ph),
+    al&&React.createElement(AB,{type:al.type},al.msg),
+    step===1&&React.createElement("div",null,
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}},
+        React.createElement("button",{onClick:function(){setRole("user");},className:"btn",style:{padding:"13px 0",borderRadius:12,background:role==="user"?"rgba(34,211,238,.1)":"var(--s1)",border:role==="user"?"1.5px solid rgba(34,211,238,.4)":"1px solid var(--b2)",color:role==="user"?"var(--c)":"var(--t2)",fontWeight:role==="user"?700:400,fontSize:14}},"\uD83D\uDC64 Customer"),
+        React.createElement("button",{onClick:function(){setRole("business");},className:"btn",style:{padding:"13px 0",borderRadius:12,background:role==="business"?"rgba(34,211,238,.1)":"var(--s1)",border:role==="business"?"1.5px solid rgba(34,211,238,.4)":"1px solid var(--b2)",color:role==="business"?"var(--c)":"var(--t2)",fontWeight:role==="business"?700:400,fontSize:14}},"\uD83C\uDFEA Business")
+      ),
+      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Full Name"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDC64"),React.createElement("input",{value:nm,onChange:function(e){setNm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.nm;return o;});},className:"field hi"+(errs.nm?" err":""),placeholder:"Your full name"})),errs.nm&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.nm)),
+      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Email Address"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\u2709\uFE0F"),React.createElement("input",{value:em,onChange:function(e){setEm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.em;return o;});},className:"field hi"+(errs.em?" err":""),placeholder:"you@email.com",type:"email"})),errs.em&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.em)),
+      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Mobile Number"),React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden"}},React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});},placeholder:"10-digit number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px"}})),errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph)),
+      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Password"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDD12"),React.createElement("input",{value:pw,onChange:function(e){setPw(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.pw;return o;});},className:"field hi"+(errs.pw?" err":""),placeholder:"Min 8 characters",type:"password"})),pw&&React.createElement("div",null,React.createElement("div",{className:"pwbar"},[1,2,3,4].map(function(i){return React.createElement("div",{key:i,className:"pwseg",style:{background:psc>=i?pwC[psc]:"var(--s3)"}})})),React.createElement("div",{style:{fontSize:11,color:pwC[psc],marginTop:3,fontWeight:600}},pwL[psc])),errs.pw&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.pw)),
+      React.createElement("div",{style:{marginBottom:20}},React.createElement("label",{className:"lbl"},"Confirm Password"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDD12"),React.createElement("input",{value:co,onChange:function(e){setCo(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.co;return o;});},className:"field hi"+(errs.co?" err":""),placeholder:"Repeat password",type:"password"})),co&&co===pw&&React.createElement("div",{className:"om"},"\u2705 Passwords match"),errs.co&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.co)),
+      React.createElement("button",{onClick:doS1,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Checking..."):"Continue \u2192"),
+      React.createElement("div",{style:{textAlign:"center"}},React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"Already have an account? "),React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Log In"))
+    ),
+    step===2&&React.createElement("div",null,
+      React.createElement("div",{style:{padding:"16px 20px",background:"rgba(34,211,238,.04)",border:"1px solid rgba(34,211,238,.15)",borderRadius:14,marginBottom:24,fontSize:14,color:"var(--t2)"}},"\uD83D\uDCE7 Code sent to ",React.createElement("strong",{style:{color:"var(--t1)"}},em)),
+      React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center",marginBottom:24}},eOtp.map(function(d,i){return React.createElement("input",{key:i,ref:function(el){eRefs.current[i]=el;},value:d,onChange:function(e){onEO(i,e.target.value);},onKeyDown:function(e){onEK(i,e);},className:"ob"+(d?" fl":""),maxLength:1,type:"tel"});})),
+      React.createElement("button",{onClick:doVE,disabled:eOtp.join("").length!==6||loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:eOtp.join("").length!==6?0.5:1}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Verifying..."):"Verify Email \u2713"),
+      React.createElement("div",{style:{textAlign:"center",fontSize:13,color:"var(--t3)"}},timer>0?"Resend in "+timer+"s":React.createElement("button",{onClick:function(){setTimer(60);},style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend Code"))
+    ),
+    step===3&&React.createElement("div",null,
+      React.createElement("div",{style:{padding:"16px 20px",background:"rgba(52,211,153,.04)",border:"1px solid rgba(52,211,153,.15)",borderRadius:14,marginBottom:24,fontSize:14,color:"var(--t2)"}},"\uD83D\uDCF1 SMS sent to ",React.createElement("strong",{style:{color:"var(--t1)"}},"+91 "+ph)),
+      React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center",marginBottom:24}},pOtp.map(function(d,i){return React.createElement("input",{key:i,ref:function(el){pRefs.current[i]=el;},value:d,onChange:function(e){onPO(i,e.target.value);},onKeyDown:function(e){onPK(i,e);},className:"ob"+(d?" fl":""),maxLength:1,type:"tel"});})),
+      React.createElement("button",{onClick:doVP,disabled:pOtp.join("").length!==6||loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:pOtp.join("").length!==6?0.5:1}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Creating Account...") :"Create Account \uD83C\uDF89"),
+      React.createElement("div",{style:{textAlign:"center",fontSize:13,color:"var(--t3)"}},timer>0?"Resend in "+timer+"s":React.createElement("button",{onClick:function(){setTimer(60);},style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend SMS"))
+    )
+  );
+}
+
+function LoginFlow(props){
+  var [step,setStep]=useState(1); var [ph,setPh]=useState(""); var [pw,setPw]=useState("");
+  var [errs,setErrs]=useState({}); var [loading,setLoading]=useState(false); var [al,setAl]=useState(null);
+  var [otp,setOtp]=useState(["","","","","",""]); var [timer,setTimer]=useState(0); var [fu,setFu]=useState(null);
+  var refs=useRef([]);
+  useEffect(function(){if(timer<=0)return;var t=setTimeout(function(){setTimer(function(x){return x-1;});},1000);return function(){clearTimeout(t);};},[timer]);
+  function doLogin(){
+    var e={};
+    if(!vP(ph))e.ph="Enter a valid 10-digit number";
+    if(!pw)e.pw="Enter your password";
+    setErrs(e);if(Object.keys(e).length>0)return;
+    setLoading(true);setAl(null);
+    var isAdmin=ADMIN_PHONES.indexOf(ph)>=0;
+    if(isAdmin){setTimeout(function(){setFu({phone:ph,role:"admin"});setLoading(false);setStep(2);setTimer(60);setAl({type:"info",msg:"OTP sent to +91 "+ph});},700);return;}
+    sbGet("users","?phone=eq."+ph).then(function(users){
+      if(!users||users.length===0){setErrs({ph:"No account found. Please sign up."});setLoading(false);return;}
+      setFu(users[0]);setTimeout(function(){setLoading(false);setStep(2);setTimer(60);setAl({type:"info",msg:"OTP sent to +91 "+ph});},700);
+    }).catch(function(){setLoading(false);setAl({type:"err",msg:"Something went wrong."});});
+  }
+  function doVerify(){
+    if(otp.join("").length!==6)return;setLoading(true);
+    setTimeout(function(){
+      var u=fu||{phone:ph,role:ADMIN_PHONES.indexOf(ph)>=0?"admin":"user"};
+      props.setUser(u);setLoading(false);
+      if(u.role==="admin")props.go("admin");else if(u.role==="business")props.go("bizDash");else props.go("dash");
+    },700);
+  }
+  function onO(i,v){if(!/^\d*$/.test(v))return;var n=otp.slice();n[i]=v.slice(-1);setOtp(n);if(v&&i<5&&refs.current[i+1])refs.current[i+1].focus();}
+  function onK(i,e){if(e.key==="Backspace"&&!otp[i]&&i>0&&refs.current[i-1])refs.current[i-1].focus();}
+  return React.createElement("div",null,
+    React.createElement("h2",{style:{fontSize:26,fontWeight:800,fontFamily:"Poppins",marginBottom:6}},step===1?"Welcome Back \uD83D\uDC4B":"Verify Your Phone \uD83D\uDD10"),
+    React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.6,marginBottom:24}},step===1?"Sign in to your Servora account":"Enter the 6-digit code sent to +91 "+ph),
+    al&&React.createElement(AB,{type:al.type},al.msg),
+    step===1&&React.createElement("div",null,
+      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Mobile Number"),React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden"}},React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});},placeholder:"10-digit number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px"}})),errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph)),
+      React.createElement("div",{style:{marginBottom:20}},React.createElement("label",{className:"lbl"},"Password"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDD12"),React.createElement("input",{value:pw,onChange:function(e){setPw(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.pw;return o;});},className:"field hi"+(errs.pw?" err":""),placeholder:"Your password",type:"password"})),errs.pw&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.pw)),
+      React.createElement("button",{onClick:doLogin,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Please wait..."):"Send OTP \u2192"),
+      React.createElement("div",{style:{textAlign:"center"}},React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"New to Servora? "),React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Create Account"))
+    ),
+    step===2&&React.createElement("div",null,
+      React.createElement("div",{style:{padding:"16px 20px",background:"rgba(34,211,238,.04)",border:"1px solid rgba(34,211,238,.15)",borderRadius:14,marginBottom:24,fontSize:14,color:"var(--t2)"}},"\uD83D\uDCF1 SMS sent to ",React.createElement("strong",{style:{color:"var(--t1)"}},"+91 "+ph)),
+      React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center",marginBottom:24}},otp.map(function(d,i){return React.createElement("input",{key:i,ref:function(el){refs.current[i]=el;},value:d,onChange:function(e){onO(i,e.target.value);},onKeyDown:function(e){onK(i,e);},className:"ob"+(d?" fl":""),maxLength:1,type:"tel"});})),
+      React.createElement("button",{onClick:doVerify,disabled:otp.join("").length!==6||loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:otp.join("").length!==6?0.5:1}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Signing in..."):"Verify and Sign In \u2713"),
+      React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:13,color:"var(--t3)"}},
+        React.createElement("button",{onClick:function(){setStep(1);},style:{background:"none",border:"none",color:"var(--t3)",cursor:"pointer",fontSize:13}},"\u2190 Change number"),
+        timer>0?React.createElement("span",null,"Resend in "+timer+"s"):React.createElement("button",{onClick:function(){setTimer(60);},style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend OTP")
+      )
+    )
+  );
+}
+
+/* =====================
+   USER DASHBOARD
+   ===================== */
+function UserDash(props){
+  var user=props.user,go=props.go;
+  var [tab,setTab]=useState("requests"); var [leads,setLeads]=useState([]);
+  useEffect(function(){if(!user||!user.phone)return;sbGet("leads","?customer_phone=eq."+user.phone+"&order=created_at.desc").then(function(d){if(d&&d.length>0)setLeads(d);});},[]);
+  return React.createElement("div",{className:"page",style:{padding:"24px 20px"}},
+    React.createElement("div",{style:{display:"flex",gap:14,alignItems:"center",marginBottom:24}},
+      React.createElement("div",{style:{width:54,height:54,borderRadius:18,background:"linear-gradient(135deg,#22d3ee,#818cf8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}},"\uD83D\uDC64"),
+      React.createElement("div",null,React.createElement("div",{style:{fontWeight:800,fontSize:20,fontFamily:"Poppins"}},user.name||"My Account"),React.createElement("div",{style:{color:"var(--t2)",fontSize:13}},"+91 "+user.phone),user.email&&React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},user.email))
+    ),
+    React.createElement("div",{style:{display:"flex",borderBottom:"1px solid var(--b1)",marginBottom:20}},
+      ["requests","saved","settings"].map(function(t){return React.createElement("button",{key:t,onClick:function(){setTab(t);},style:{flex:1,padding:"12px 0",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--c)":"2px solid transparent",color:tab===t?"var(--c)":"var(--t3)",cursor:"pointer",fontSize:13,fontWeight:600,textTransform:"capitalize"}},t);})
+    ),
+    tab==="requests"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12}},
+      leads.length===0?React.createElement("div",{style:{textAlign:"center",padding:40,color:"var(--t3)"}},React.createElement("div",{style:{fontSize:40,marginBottom:10}},"\uD83D\uDCCB"),React.createElement("div",{style:{fontSize:15,fontWeight:600}},"No requests yet"),React.createElement("button",{onClick:function(){go("listings");},className:"btn bp",style:{marginTop:16,padding:"11px 24px",borderRadius:12,fontSize:14}},"Find Services")):
+      leads.map(function(l){return React.createElement("div",{key:l.id,className:"card",style:{padding:18,borderRadius:16}},React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:4}},l.message||"Service Request"),React.createElement("div",{style:{color:"var(--t3)",fontSize:12,marginBottom:8}},new Date(l.created_at).toLocaleDateString("en-IN")),React.createElement("span",{className:"badge "+(l.status==="new"?"bv":"bg2")},l.status));})
+    ),
+    tab==="saved"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12}},BIZ.slice(0,2).map(function(b){return React.createElement(BizCard,{key:b.id,b:b,compact:true,onClick:function(){}});}),React.createElement("button",{onClick:function(){go("listings");},className:"btn bo",style:{padding:"13px 0",borderRadius:14,fontSize:14,fontWeight:600}},"Browse More Services")),
+    tab==="settings"&&React.createElement("div",{className:"card",style:{padding:24,borderRadius:16}},
+      React.createElement("h4",{style:{fontWeight:700,marginBottom:16}},"Account Info"),
+      [["Name",user.name||"-"],["Email",user.email||"-"],["Phone","+91 "+user.phone],["Role",user.role]].map(function(x){return React.createElement("div",{key:x[0],style:{marginBottom:14}},React.createElement("label",{className:"lbl"},x[0]),React.createElement("div",{style:{color:"var(--t1)",fontSize:15}},x[1]));})
+    )
+  );
+}
+
+/* =====================
+   BIZ DASHBOARD
+   ===================== */
+function BizDash(props){
+  var user=props.user;
+  var [tab,setTab]=useState("leads"); var [biz,setBiz]=useState(null); var [leads,setLeads]=useState([]);
+  var [aiTip,setAiTip]=useState(""); var [aiLoad,setAiLoad]=useState(false);
+  useEffect(function(){
+    if(!user||!user.id)return;
+    sbGet("businesses","?owner_id=eq."+user.id+"&limit=1").then(function(d){
+      if(d&&d.length>0){setBiz(d[0]);sbGet("leads","?business_id=eq."+d[0].id+"&order=created_at.desc").then(function(l){if(l)setLeads(l);});}
+    });
+  },[]);
+  function doAI(){setAiLoad(true);callAI("You are a growth advisor for Indian local businesses. Give 3 numbered actionable tips for more leads on Servora. Under 90 words.",(biz?biz.name:"my business")+" in Pune, "+(biz&&biz.plan||"free")+" plan").then(function(r){setAiTip(r);setAiLoad(false);});}
+  function markC(id){sbPatch("leads","id",id,{status:"contacted"});setLeads(function(l){return l.map(function(x){return x.id===id?Object.assign({},x,{status:"contacted"}):x;});});}
+  return React.createElement("div",{className:"page",style:{padding:"24px 20px"}},
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}},
+      React.createElement("div",null,React.createElement("div",{style:{fontWeight:800,fontSize:20,fontFamily:"Poppins",marginBottom:4}},"Business Hub"),React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},React.createElement("span",{className:"badge "+(biz&&biz.plan==="elite"?"ba":biz&&biz.plan==="pro"?"bv":"bc")},(biz&&biz.plan||"free").toUpperCase()),React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},biz&&biz.name||"Your Business"))),
+      biz&&React.createElement("span",{className:"badge "+(biz.status==="approved"?"bg2":biz.status==="rejected"?"br":"ba")},biz.status||"pending")
+    ),
+    React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}},
+      [{l:"Leads",v:leads.length,i:"\u26A1",c:"#22d3ee"},{l:"Views",v:biz&&biz.views||0,i:"\uD83D\uDC41\uFE0F",c:"#818cf8"},{l:"Rating",v:biz&&biz.rating||"-",i:"\u2B50",c:"#fbbf24"},{l:"Reviews",v:biz&&biz.reviews_count||0,i:"\uD83D\uDCAC",c:"#34d399"}].map(function(s){
+        return React.createElement("div",{key:s.l,className:"card",style:{padding:16,borderRadius:16}},React.createElement("div",{style:{fontSize:22,marginBottom:8}},s.i),React.createElement("div",{style:{fontWeight:900,fontSize:22,marginBottom:2,fontFamily:"Poppins",color:s.c}},s.v),React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},s.l));
+      })
+    ),
+    React.createElement("div",{style:{display:"flex",borderBottom:"1px solid var(--b1)",marginBottom:20,overflowX:"auto"}},
+      ["leads","profile","ai","plans"].map(function(t){return React.createElement("button",{key:t,onClick:function(){setTab(t);},style:{flexShrink:0,padding:"12px 14px",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--c)":"2px solid transparent",color:tab===t?"var(--c)":"var(--t3)",cursor:"pointer",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}},t==="ai"?"\uD83E\uDD16 AI Coach":t==="plans"?"\u2B06\uFE0F Plans":t.charAt(0).toUpperCase()+t.slice(1));})
+    ),
+    tab==="leads"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12}},
+      leads.length===0?React.createElement("div",{style:{textAlign:"center",padding:40,color:"var(--t3)"}},React.createElement("div",{style:{fontSize:40,marginBottom:10}},"\u26A1"),React.createElement("div",{style:{fontSize:15,fontWeight:600}},"No leads yet")):
+      leads.map(function(l){return React.createElement("div",{key:l.id,className:"card",style:{padding:16,borderRadius:14}},
+        React.createElement("div",{style:{display:"flex",alignItems:"center",gap:12,marginBottom:12}},
+          React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:"var(--s3)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16}},l.customer_name&&l.customer_name[0]||"?"),
+          React.createElement("div",{style:{flex:1}},React.createElement("div",{style:{fontWeight:600,fontSize:15}},l.customer_name||"Anonymous"),React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},l.customer_phone+" \u00B7 "+new Date(l.created_at).toLocaleDateString("en-IN")),l.message&&React.createElement("div",{style:{color:"var(--t2)",fontSize:12,marginTop:2}},l.message)),
+          React.createElement("span",{className:"badge "+(l.status==="new"?"bv":"bg2")},l.status)
+        ),
+        React.createElement("div",{style:{display:"flex",gap:8}},
+          React.createElement("button",{onClick:function(){window.open("https://wa.me/91"+l.customer_phone,"_blank");},className:"btn bs",style:{flex:1,padding:"9px 0",borderRadius:9,fontSize:13}},"\uD83D\uDCAC WhatsApp"),
+          React.createElement("button",{onClick:function(){markC(l.id);},className:"btn bo",style:{flex:1,padding:"9px 0",borderRadius:9,fontSize:13}},"Mark Contacted")
+        )
+      );})
+    ),
+    tab==="ai"&&React.createElement("div",{style:{padding:28,background:"rgba(34,211,238,.03)",border:"1px solid rgba(34,211,238,.15)",borderRadius:20,textAlign:"center"}},
+      React.createElement("div",{style:{fontSize:44,marginBottom:10}},"\uD83E\uDD16"),
+      React.createElement("h3",{style:{fontWeight:800,fontSize:20,marginBottom:6,fontFamily:"Poppins"}},"AI Business Coach"),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.7,marginBottom:20}},"Personalized tips powered by Claude AI."),
+      aiTip?React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap",textAlign:"left"}},aiTip):
+      aiLoad?React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:8}},React.createElement(DL,null)):
+      React.createElement("button",{onClick:doAI,className:"btn bp",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}},"\uD83D\uDE80 Get My AI Growth Plan")
+    ),
+    tab==="plans"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+      PLANS.map(function(p){
+        var isCur=biz&&biz.plan===p.id;
+        return React.createElement("div",{key:p.id,className:"card",style:{padding:22,borderRadius:18,border:p.popular?"1.5px solid rgba(129,140,248,.4)":"1px solid var(--b1)",position:"relative"}},
+          p.popular&&React.createElement("div",{style:{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(90deg,#818cf8,#22d3ee)",color:"#fff",fontSize:9,padding:"3px 14px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap"}},"MOST POPULAR"),
+          React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}},React.createElement("div",null,React.createElement("div",{style:{fontFamily:"Poppins",fontWeight:800,fontSize:17}},p.name),React.createElement("div",null,React.createElement("span",{style:{fontSize:24,fontWeight:900,color:p.color}},"Rs."+p.price.toLocaleString()),React.createElement("span",{style:{color:"var(--t3)",fontSize:12}},"/month"))),React.createElement("div",{style:{textAlign:"right"}},React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},"Leads"),React.createElement("div",{style:{fontWeight:800,fontSize:18,color:p.color}},p.leads>999?"Unlimited":p.leads))),
+          p.features.map(function(f){return React.createElement("div",{key:f,style:{fontSize:13,color:"var(--t2)",marginBottom:5,display:"flex",gap:7}},React.createElement("span",{style:{color:p.color}},"\u2713"),f);}),
+          React.createElement("button",{className:"btn bp",disabled:isCur||p.id==="free",style:{width:"100%",padding:"12px 0",borderRadius:12,fontSize:14,marginTop:14,opacity:(isCur||p.id==="free")?0.4:1}},isCur?"Current Plan":p.id==="free"?"Free Plan":"Upgrade - Contact Support")
+        );
+      })
+    ),
+    tab==="profile"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+      [["Business Name",biz&&biz.name||""],["Category",biz&&(biz.category||biz.cat)||""],["Location",biz&&(biz.location||biz.loc)||""],["Phone",biz&&biz.phone||""]].map(function(x){return React.createElement("div",{key:x[0]},React.createElement("label",{className:"lbl"},x[0]),React.createElement("input",{className:"field",defaultValue:x[1]}));}),
+      React.createElement("div",null,React.createElement("label",{className:"lbl"},"About"),React.createElement("textarea",{className:"field",rows:4,defaultValue:biz&&biz.description||"",style:{resize:"none"}})),
+      React.createElement("button",{className:"btn bp",style:{padding:"14px 0",borderRadius:14,fontSize:15}},"\uD83D\uDCBE Save Changes")
+    )
+  );
+}
+
+/* =====================
+   ADMIN PANEL
+   Secret: only your phone can access
+   ===================== */
+function AdminPanel(){
+  var [tab,setTab]=useState("overview"); var [bizList,setBizList]=useState([]); var [users,setUsers]=useState([]); var [leads,setLeads]=useState([]);
+  var [loading,setLoading]=useState(true); var [aiMod,setAiMod]=useState(""); var [aiModLoad,setAiModLoad]=useState(false);
+  var [banner,setBanner]=useState(""); var [stats,setStats]=useState({u:0,b:0,l:0,r:0});
+  useEffect(function(){
+    Promise.all([sbGet("businesses","?order=created_at.desc"),sbGet("users","?order=created_at.desc"),sbGet("leads","?order=created_at.desc&limit=100")]).then(function(r){
+      var biz=r[0]||[],usr=r[1]||[],led=r[2]||[];
+      setBizList(biz);setUsers(usr);setLeads(led);
+      setStats({u:usr.length,b:biz.length,l:led.length,r:biz.reduce(function(a,b){return a+(b.plan==="elite"?4999:b.plan==="pro"?2499:b.plan==="growth"?999:0);},0)});
+      setLoading(false);
+    });
+  },[]);
+  function approve(id){sbPatch("businesses","id",id,{status:"approved"});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{status:"approved"}):b;});});}
+  function reject(id){sbPatch("businesses","id",id,{status:"rejected"});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{status:"rejected"}):b;});});}
+  function verify(id){sbPatch("businesses","id",id,{verified:true});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{verified:true}):b;});});}
+  function blockU(id,blk){sbPatch("users","id",id,{blocked:!blk});setUsers(function(l){return l.map(function(u){return u.id===id?Object.assign({},u,{blocked:!blk}):u;});});}
+  function doAIMod(){setAiModLoad(true);callAI("You are a content moderator. Detect fake reviews and spam. Under 80 words, identify suspicious ones with brief reasons.","1. BEST EVER BOOK NOW!!! - new account today\n2. AC repaired well, fair price - 2yr account, 12 reviews\n3. SCAM DO NOT USE - 5 reviews today same IP\n4. Good job, minor delay, satisfied - 1yr account, 9 reviews").then(function(r){setAiMod(r);setAiModLoad(false);});}
+  function sendBanner(){if(!banner.trim())return;sbPost("announcements",{title:"Platform Update",message:banner,active:true});setBanner("");alert("Announcement saved!");}
+  var pending=bizList.filter(function(b){return b.status==="pending";});
+  if(loading)return React.createElement("div",{style:{padding:60,textAlign:"center"}},React.createElement(DL,null));
+  return React.createElement("div",{className:"page",style:{padding:"24px 20px"}},
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}},
+      React.createElement("div",null,React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center",marginBottom:4}},React.createElement("span",{style:{fontWeight:800,fontSize:22,fontFamily:"Poppins"}},"Admin Center"),React.createElement("span",{className:"badge br"},"SUPER ADMIN")),React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"Servora Platform \u00B7 Pune")),
+      React.createElement("button",{onClick:function(){window.location.reload();},className:"btn bo",style:{padding:"9px 14px",borderRadius:11,fontSize:12,fontWeight:600}},"\uD83D\uDD04 Refresh")
+    ),
+    React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}},
+      [{l:"Total Users",v:stats.u,i:"\uD83D\uDC65",c:"#22d3ee"},{l:"Businesses",v:stats.b,i:"\uD83C\uDFEA",c:"#818cf8"},{l:"MRR",v:"Rs."+stats.r.toLocaleString("en-IN"),i:"\uD83D\uDCB0",c:"#fbbf24"},{l:"Total Leads",v:stats.l,i:"\u26A1",c:"#34d399"}].map(function(s){
+        return React.createElement("div",{key:s.l,className:"card",style:{padding:16,borderRadius:16}},React.createElement("div",{style:{fontSize:22,marginBottom:8}},s.i),React.createElement("div",{style:{fontWeight:900,fontSize:20,marginBottom:2,fontFamily:"Poppins",color:s.c}},s.v),React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},s.l));
+      })
+    ),
+    React.createElement("div",{style:{display:"flex",borderBottom:"1px solid var(--b1)",marginBottom:20,overflowX:"auto"}},
+      ["overview","businesses","users","leads","ai-mod","announce"].map(function(t){return React.createElement("button",{key:t,onClick:function(){setTab(t);},style:{flexShrink:0,padding:"12px 10px",background:"transparent",border:"none",borderBottom:tab===t?"2px solid var(--c)":"2px solid transparent",color:tab===t?"var(--c)":"var(--t3)",cursor:"pointer",fontSize:12,fontWeight:600,whiteSpace:"nowrap"}},t==="ai-mod"?"\uD83D\uDEE1\uFE0F AI Mod":t==="announce"?"\uD83D\uDCE2 Announce":t.charAt(0).toUpperCase()+t.slice(1));})
+    ),
+    tab==="overview"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+      React.createElement("div",{className:"card",style:{padding:20,borderRadius:16}},
+        React.createElement("h4",{style:{fontWeight:700,marginBottom:14}},"Pending Approvals ("+pending.length+")"),
+        pending.length===0?React.createElement("p",{style:{color:"var(--t3)",fontSize:13}},"All caught up!"):
+        pending.slice(0,5).map(function(b){return React.createElement("div",{key:b.id,style:{display:"flex",alignItems:"center",gap:12,padding:"12px 0",borderBottom:"1px solid var(--b1)"}},React.createElement("div",{style:{flex:1}},React.createElement("div",{style:{fontWeight:600,fontSize:14}},b.name),React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},(b.category||b.cat)+" \u00B7 "+b.location)),React.createElement("div",{style:{display:"flex",gap:6}},React.createElement("button",{onClick:function(){approve(b.id);},className:"btn bs",style:{width:34,height:34,borderRadius:8,padding:0,fontSize:16}},"\u2713"),React.createElement("button",{onClick:function(){reject(b.id);},className:"btn bd",style:{width:34,height:34,borderRadius:8,padding:0,fontSize:16}},"\u2715")));})
+      ),
+      React.createElement("div",{className:"card",style:{padding:20,borderRadius:16}},
+        React.createElement("h4",{style:{fontWeight:700,marginBottom:14}},"Revenue by Plan"),
+        PLANS.map(function(p){var cnt=bizList.filter(function(b){return b.plan===p.id;}).length;return React.createElement("div",{key:p.id,style:{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--b1)"}},React.createElement("div",{style:{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}),React.createElement("span",{style:{flex:1,fontSize:13,color:"var(--t2)"}},p.name),React.createElement("span",{style:{fontSize:12,color:"var(--t3)"}},cnt+" biz"),React.createElement("span",{style:{fontWeight:700,fontSize:13,color:"var(--green)"}},"Rs."+(cnt*p.price).toLocaleString("en-IN")));})
+      )
+    ),
+    tab==="businesses"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12}},
+      bizList.map(function(b){return React.createElement("div",{key:b.id,className:"card",style:{padding:16,borderRadius:16}},
+        React.createElement("div",{style:{display:"flex",gap:10,alignItems:"flex-start",marginBottom:10}},React.createElement("div",{style:{flex:1}},React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center",marginBottom:2}},React.createElement("div",{style:{fontWeight:700,fontSize:15}},b.name),b.verified&&React.createElement("span",{style:{fontSize:12}},"\u2705")),React.createElement("div",{style:{color:"var(--t3)",fontSize:12,marginBottom:6}},(b.category||b.cat)+" \u00B7 "+b.location),React.createElement("div",{style:{display:"flex",gap:5,flexWrap:"wrap"}},React.createElement("span",{className:"badge "+(b.plan==="elite"?"ba":b.plan==="pro"?"bv":"bc")},b.plan||"free"),React.createElement("span",{className:"badge "+(b.status==="approved"?"bg2":b.status==="rejected"?"br":"ba")},b.status||"pending")))),
+        React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},
+          b.status!=="approved"&&React.createElement("button",{onClick:function(){approve(b.id);},className:"btn bs",style:{flex:1,padding:"8px 0",borderRadius:9,fontSize:12,minWidth:70}},"Approve"),
+          b.status!=="rejected"&&React.createElement("button",{onClick:function(){reject(b.id);},className:"btn bd",style:{flex:1,padding:"8px 0",borderRadius:9,fontSize:12,minWidth:70}},"Reject"),
+          !b.verified&&React.createElement("button",{onClick:function(){verify(b.id);},className:"btn bw",style:{flex:1,padding:"8px 0",borderRadius:9,fontSize:12,minWidth:70}},"\u2705 Verify")
+        )
+      );})
+    ),
+    tab==="users"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12}},
+      users.map(function(u){return React.createElement("div",{key:u.id,className:"card",style:{padding:16,borderRadius:14,display:"flex",alignItems:"center",gap:12}},
+        React.createElement("div",{style:{width:42,height:42,borderRadius:12,background:"linear-gradient(135deg,rgba(34,211,238,.15),rgba(129,140,248,.15))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}},"\uD83D\uDC64"),
+        React.createElement("div",{style:{flex:1}},React.createElement("div",{style:{fontWeight:600,fontSize:14}},u.name||u.phone),React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},u.phone+(u.email?" \u00B7 "+u.email:"")),React.createElement("div",{style:{display:"flex",gap:5,marginTop:3}},React.createElement("span",{className:"badge "+(u.role==="admin"?"ba":u.role==="business"?"bc":"bg2"),style:{fontSize:9}},u.role),u.blocked&&React.createElement("span",{className:"badge br",style:{fontSize:9}},"BLOCKED"))),
+        u.role!=="admin"&&React.createElement("button",{onClick:function(){blockU(u.id,u.blocked);},className:"btn "+(u.blocked?"bs":"bd"),style:{padding:"7px 14px",borderRadius:9,fontSize:12,fontWeight:700}},u.blocked?"Unblock":"Block")
+      );})
+    ),
+    tab==="leads"&&React.createElement("div",null,
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:14}},
+        [["Total",leads.length,"#22d3ee"],["New",leads.filter(function(l){return l.status==="new";}).length,"#818cf8"],["Done",leads.filter(function(l){return l.status!=="new";}).length,"#34d399"]].map(function(x){return React.createElement("div",{key:x[0],style:{padding:"14px 10px",background:x[2]+"08",border:"1px solid "+x[2]+"25",borderRadius:14,textAlign:"center"}},React.createElement("div",{style:{fontWeight:800,fontSize:20,color:x[2]}},x[1]),React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},x[0]));})
+      ),
+      React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:10}},
+        leads.map(function(l){return React.createElement("div",{key:l.id,className:"card",style:{padding:14,borderRadius:14}},React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:4}},React.createElement("span",{style:{fontWeight:600,fontSize:14}},l.customer_name||"Anonymous"),React.createElement("span",{className:"badge "+(l.status==="new"?"bv":"bg2")},l.status)),React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},l.customer_phone+" \u00B7 "+new Date(l.created_at).toLocaleDateString("en-IN")),l.message&&React.createElement("div",{style:{color:"var(--t2)",fontSize:13,marginTop:6}},l.message));})
+      )
+    ),
+    tab==="ai-mod"&&React.createElement("div",null,
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}},
+        [["🚨","Flagged","0","var(--rose)"],["✅","Approved",leads.length,"var(--green)"],["🔍","Pending",pending.length,"var(--amber)"]].map(function(x){return React.createElement("div",{key:x[1],style:{padding:"14px 10px",background:x[3]+"08",border:"1px solid "+x[3]+"25",borderRadius:14,textAlign:"center"}},React.createElement("div",{style:{fontSize:20}},x[0]),React.createElement("div",{style:{fontWeight:800,fontSize:18,color:x[3]}},x[2]),React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},x[1]));})
+      ),
+      React.createElement("div",{style:{padding:24,background:"rgba(251,113,133,.03)",border:"1px solid rgba(251,113,133,.15)",borderRadius:18}},
+        React.createElement("h4",{style:{fontWeight:700,fontSize:16,marginBottom:8,fontFamily:"Poppins"}},"\uD83D\uDEE1\uFE0F AI Review Scanner"),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:13,lineHeight:1.7,marginBottom:16}},"Auto-detect fake reviews, spam and coordinated attacks using Claude AI."),
+        aiMod?React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap"}},aiMod):
+        aiModLoad?React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:8}},React.createElement(DL,null)):
+        React.createElement("button",{onClick:doAIMod,className:"btn bp",style:{width:"100%",padding:"13px 0",borderRadius:12,fontSize:14}},"\uD83D\uDEE1\uFE0F Run AI Moderation Scan")
+      )
+    ),
+    tab==="announce"&&React.createElement("div",{className:"card",style:{padding:24,borderRadius:16}},
+      React.createElement("h4",{style:{fontWeight:700,fontSize:15,marginBottom:12}},"\uD83D\uDCE2 Send to All Users"),
+      React.createElement("label",{className:"lbl"},"Announcement"),
+      React.createElement("textarea",{value:banner,onChange:function(e){setBanner(e.target.value);},className:"field",rows:4,placeholder:"Write your announcement here...",style:{marginBottom:14,resize:"none"}}),
+      React.createElement("button",{onClick:sendBanner,disabled:!banner.trim(),className:"btn bp",style:{width:"100%",padding:"13px 0",borderRadius:12,fontSize:14}},"\uD83D\uDCE4 Send Announcement")
+    )
+  );
+}
+
+/* =====================
+   AI CHAT
+   ===================== */
+function AiChat(props){
+  var [msgs,setMsgs]=useState([{role:"assistant",text:"Hi! I'm Servora AI. I help you find the best local services in Pune. What do you need today?"}]);
+  var [inp,setInp]=useState(""); var [loading,setLoading]=useState(false);
+  var bottomRef=useRef(null);
+  useEffect(function(){if(bottomRef.current)bottomRef.current.scrollIntoView({behavior:"smooth"});},[msgs]);
+  function doSend(){
+    if(!inp.trim()||loading)return;
+    var text=inp.trim();setInp("");setLoading(true);
+    setMsgs(function(p){return p.concat([{role:"user",text:text}]);});
+    callAI("You are Servora AI for Pune local services. Be friendly, concise (max 3 sentences). Use Rs. for prices. End with a helpful follow-up question.",text,msgs).then(function(r){setMsgs(function(p){return p.concat([{role:"assistant",text:r}]);});setLoading(false);});
+  }
+  var QUICK=["Best home cleaner?","Doctor near Baner?","Cheapest tutor?","AC repair urgent?","Salon open now?"];
+  return React.createElement("div",{style:{position:"fixed",inset:0,zIndex:2000,background:"var(--bg)",display:"flex",flexDirection:"column"}},
+    React.createElement("div",{style:{padding:"14px 20px",borderBottom:"1px solid var(--b1)",display:"flex",alignItems:"center",gap:12,background:"var(--bg2)"}},
+      React.createElement("button",{onClick:props.onClose,className:"btn bg",style:{padding:0,fontSize:24,lineHeight:1}},"\u2190"),
+      React.createElement("div",{style:{width:42,height:42,borderRadius:13,background:"linear-gradient(135deg,var(--cd),var(--vd))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}},"\uD83E\uDD16"),
+      React.createElement("div",null,React.createElement("div",{style:{fontWeight:700,fontSize:16,fontFamily:"Poppins"}},"Servora AI"),React.createElement("div",{style:{fontSize:12,color:"var(--c)",display:"flex",alignItems:"center",gap:5}},React.createElement("span",{style:{width:6,height:6,borderRadius:"50%",background:"var(--c)",display:"inline-block"}}),"Online \u00B7 Claude AI"))
+    ),
+    React.createElement("div",{style:{flex:1,overflowY:"auto",padding:16,display:"flex",flexDirection:"column",gap:12}},
+      msgs.map(function(m,i){
+        var isU=m.role==="user";
+        return React.createElement("div",{key:i,style:{display:"flex",justifyContent:isU?"flex-end":"flex-start",gap:8,alignItems:"flex-end"}},
+          !isU&&React.createElement("div",{style:{width:32,height:32,borderRadius:10,background:"linear-gradient(135deg,var(--cd),var(--vd))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}},"\uD83E\uDD16"),
+          React.createElement("div",{style:{maxWidth:"80%",padding:"12px 16px",borderRadius:isU?"18px 18px 4px 18px":"18px 18px 18px 4px",background:isU?"linear-gradient(135deg,var(--cd),var(--vd))":"var(--s2)",fontSize:14,lineHeight:1.75,color:isU?"white":"var(--t2)"}},m.text)
+        );
+      }),
+      loading&&React.createElement("div",{style:{display:"flex",gap:8,alignItems:"flex-end"}},React.createElement("div",{style:{width:32,height:32,borderRadius:10,background:"linear-gradient(135deg,var(--cd),var(--vd))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}},"\uD83E\uDD16"),React.createElement("div",{style:{padding:"14px 18px",borderRadius:"18px 18px 18px 4px",background:"var(--s2)"}},React.createElement(DL,null))),
+      React.createElement("div",{ref:bottomRef})
+    ),
+    msgs.length<=1&&React.createElement("div",{className:"chips",style:{padding:"0 16px 12px"}},QUICK.map(function(q){return React.createElement("button",{key:q,onClick:function(){setInp(q);},className:"chip",style:{fontSize:12}},q);})),
+    React.createElement("div",{style:{padding:"12px 16px",borderTop:"1px solid var(--b1)",background:"var(--bg2)",display:"flex",gap:10,alignItems:"flex-end"}},
+      React.createElement("textarea",{value:inp,onChange:function(e){setInp(e.target.value);},onKeyDown:function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();doSend();}},placeholder:"Ask about any service in Pune...",rows:1,style:{flex:1,background:"var(--s2)",border:"1px solid var(--b2)",borderRadius:14,padding:"12px 16px",color:"var(--t1)",fontSize:15,outline:"none",resize:"none",maxHeight:100,lineHeight:1.5}}),
+      React.createElement("button",{onClick:doSend,disabled:!inp.trim()||loading,className:"btn bp",style:{width:46,height:46,borderRadius:14,fontSize:20,flexShrink:0,opacity:(!inp.trim()||loading)?0.4:1,padding:0}},"\u2191")
+    )
+  );
+}
+
+/* =====================
+   NAV BARS
+   ===================== */
+function TopBar(props){
+  var page=props.page,go=props.go,user=props.user,setUser=props.setUser;
+  return React.createElement("nav",{className:"topbar"},
+    React.createElement("div",{onClick:function(){go("home");},style:{display:"flex",alignItems:"center",gap:9,cursor:"pointer"}},
+      React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,var(--cd),var(--vd))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}},"\u26A1"),
+      React.createElement("span",{className:"gtc",style:{fontWeight:900,fontSize:20,fontFamily:"Poppins"}},"Servora"),
+      React.createElement("span",{style:{fontSize:10,background:"rgba(251,191,36,.12)",color:"var(--amber)",border:"1px solid rgba(251,191,36,.25)",borderRadius:5,padding:"2px 7px",fontWeight:700}},"PUNE")
+    ),
+    React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center"}},
+      React.createElement("button",{onClick:function(){go("chat");},className:"btn bo",style:{padding:"8px 14px",borderRadius:10,fontSize:13}},"\uD83E\uDD16 AI"),
+      user?React.createElement("div",{style:{display:"flex",gap:8}},
+        React.createElement("button",{onClick:function(){go("dashboard");},style:{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,background:"var(--s1)",border:"1px solid var(--b1)",cursor:"pointer",color:"var(--t2)",fontSize:13}},React.createElement("span",{style:{width:24,height:24,borderRadius:"50%",background:"linear-gradient(135deg,#22d3ee,#818cf8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}},"\uD83D\uDC64"),user.name||"Dashboard"),
+        React.createElement("button",{onClick:function(){setUser(null);},className:"btn bg",style:{padding:"7px 12px",borderRadius:10,fontSize:13}},"Logout")
+      ):React.createElement("button",{onClick:function(){go("login");},className:"btn bp",style:{padding:"9px 20px",borderRadius:12,fontSize:14}},"Login")
+    )
+  );
+}
+
+function BottomNav(props){
+  var page=props.page,go=props.go,user=props.user;
+  var items=[{id:"home",icon:"\uD83C\uDFE0",label:"Home"},{id:"listings",icon:"\uD83D\uDD0D",label:"Explore"},{id:"chat",icon:"\uD83E\uDD16",label:"AI",notif:true},{id:"dashboard",icon:"\uD83D\uDCCB",label:"Dashboard"},{id:"account",icon:"\uD83D\uDC64",label:user?"Me":"Login"}];
+  return React.createElement("nav",{className:"bnav"},
+    items.map(function(item){
+      return React.createElement("button",{key:item.id,onClick:function(){go(item.id);},className:"nb"+(page===item.id?" on":"")},
+        React.createElement("span",{className:"ni",style:{position:"relative"}},item.icon,item.notif&&React.createElement("span",{className:"ndot"})),
+        React.createElement("span",{className:"nl",style:{color:page===item.id?"var(--c)":"var(--t3)"}},item.label)
+      );
+    })
+  );
+}
+
+/* =====================
+   COUNTDOWN HOOK
+   ===================== */
+function useCountdown(secs){
+  var [t,setT]=useState(secs);
+  useEffect(function(){var id=setInterval(function(){setT(function(x){return x>0?x-1:0;});},1000);return function(){clearInterval(id);};}, []);
+  var h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=t%60;
+  function pad(n){return String(n).padStart(2,"0");}
+  return {h:pad(h),m:pad(m),s:pad(s),total:t};
+}
+
+/* =====================
+   BUSINESS ONBOARDING (JustDial-style)
+   ===================== */
+var BIZ_CATS=["Home Cleaning","Plumbing Services","Electrical Services","AC Repair","Doctor & Clinic","Dental Clinic","Beauty Salon","Gym & Fitness","Tutor & Coaching","Car Service","Interior Designer","Photographer","Event Management","Pest Control","Painter","Carpenter","Digital Marketing Agency","Web Design Agency","Graphic Designer","Chartered Accountant","Legal Services","Real Estate Agent","Travel Agency","Security Services"];
+var PIN_MAP={"411001":"Pune|Maharashtra","411028":"Pune|Maharashtra","411045":"Pune|Maharashtra","411057":"Pune|Maharashtra","411002":"Pune|Maharashtra","400001":"Mumbai|Maharashtra","110001":"Delhi|Delhi","560001":"Bangalore|Karnataka","600001":"Chennai|Tamil Nadu","500001":"Hyderabad|Telangana"};
+
+function BusinessOnboard(props){
+  var setUser=props.setUser,go=props.go;
+  var [step,setStep]=useState(1);
+  var [ph,setPh]=useState(""); var [loading,setLoading]=useState(false);
+  var [nm,setNm]=useState(""); var [pin,setPin]=useState(""); var [city,setCity]=useState(""); var [pinLoad,setPinLoad]=useState(false);
+  var [catQ,setCatQ]=useState(""); var [selCats,setSelCats]=useState([]); var [showDrop,setShowDrop]=useState(false);
+  var [selPlan,setSelPlan]=useState("growth");
+  var [errs,setErrs]=useState({});
+  var cd=useCountdown(32662);
+  var STEPS=["Phone","Details","Category","Plan","Done"];
+  var SUGG=["Digital Marketing Agency","Home Cleaning","AC Repair","Tutor & Coaching","Beauty Salon","Event Management","Electrical Services","Car Service"];
+  var filtered=BIZ_CATS.filter(function(c){return catQ&&c.toLowerCase().indexOf(catQ.toLowerCase())>=0;});
+
+  function doPin(v){
+    setPin(v);
+    if(v.length===6){
+      setPinLoad(true);
+      setTimeout(function(){
+        var r=PIN_MAP[v]||"Pune|Maharashtra";
+        var parts=r.split("|");
+        setCity(parts[0]);
+        setPinLoad(false);
+      },600);
+    } else {setCity("");}
+  }
+  function addCat(c){if(selCats.indexOf(c)<0&&selCats.length<5)setSelCats(function(a){return a.concat([c]);});setCatQ("");setShowDrop(false);}
+  function remCat(c){setSelCats(function(a){return a.filter(function(x){return x!==c;});});}
+
+  function s1(){if(!/^[6-9]\d{9}$/.test(ph)){setErrs({ph:"Enter valid 10-digit mobile"});return;}setLoading(true);setTimeout(function(){setLoading(false);setStep(2);setErrs({});},700);}
+  function s2(){if(!nm.trim()){setErrs({nm:"Business name required"});return;}if(pin.length!==6){setErrs({pin:"Enter valid 6-digit pincode"});return;}setStep(3);setErrs({});}
+  function s3(){if(selCats.length===0){setErrs({cat:"Select at least one category"});return;}setStep(4);setErrs({});}
+  function finish(){
+    setLoading(true);
+    var r=PIN_MAP[pin]||"Pune|Maharashtra"; var parts=r.split("|");
+    var u={name:nm,phone:ph,role:"business",plan:selPlan,city:parts[0]};
+    sbPost("businesses",{name:nm,phone:ph,plan:selPlan,category:selCats[0],location:parts[0],status:"pending",verified:false,rating:0,reviews:0,views:0});
+    sbPost("users",{name:nm,phone:ph,role:"business",plan:selPlan});
+    setTimeout(function(){setUser(u);setLoading(false);setStep(5);},900);
+  }
+
+  return React.createElement("div",{className:"page",style:{paddingBottom:40}},
+    step<5&&React.createElement("div",{className:"steps"},
+      STEPS.slice(0,4).map(function(s,i){
+        var n=i+1,isDone=step>n,isAct=step===n;
+        return React.createElement("div",{key:s,className:"step-item"+(isDone?" done":"")},
+          React.createElement("div",{className:"step-circle "+(isDone?"done":isAct?"active":"idle")},isDone?"✓":n),
+          React.createElement("div",{className:"step-label "+(isAct?"active":"")},s)
+        );
+      })
+    ),
+    step===1&&React.createElement("div",{className:"au",style:{padding:"28px 20px"}},
+      React.createElement("div",{style:{textAlign:"center",marginBottom:28}},
+        React.createElement("div",{style:{fontSize:48,marginBottom:12}},"🏢"),
+        React.createElement("h2",{style:{fontSize:24,fontWeight:900,fontFamily:"Poppins",marginBottom:6}},"List Your Business"),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.7}},"Join 3,241+ businesses growing on Servora Pune")
+      ),
+      [["🏆","Rank above your competitors"],["⚡","Get leads from Day 1"],["📊","Track & analyse performance"],["🤖","AI-powered growth coach"]].map(function(x){
+        return React.createElement("div",{key:x[1],style:{display:"flex",alignItems:"center",gap:12,marginBottom:14}},
+          React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"rgba(34,211,238,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}},x[0]),
+          React.createElement("span",{style:{fontSize:14,color:"var(--t2)"}},x[1])
+        );
+      }),
+      React.createElement("label",{className:"lbl",style:{marginTop:20}},"Mobile Number"),
+      React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden",marginBottom:6}},
+        React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"🇮🇳 +91"),
+        React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs({});},placeholder:"10-digit mobile",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px",fontSize:16}})
+      ),
+      errs.ph&&React.createElement("div",{className:"em"},"⚠️ "+errs.ph),
+      React.createElement("button",{onClick:s1,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginTop:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Verifying..."):"Get Started Free →"),
+      React.createElement("p",{style:{textAlign:"center",fontSize:12,color:"var(--t3)",marginTop:10}},"By continuing you agree to our Terms & Privacy Policy")
+    ),
+    step===2&&React.createElement("div",{className:"au",style:{padding:"28px 20px"}},
+      React.createElement("h2",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Business Details"),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:24}},"Tell us about your business"),
+      React.createElement("div",{style:{marginBottom:16}},
+        React.createElement("label",{className:"lbl"},"Business Name *"),
+        React.createElement("input",{value:nm,onChange:function(e){setNm(e.target.value);setErrs({});},className:"field"+(errs.nm?" err":""),placeholder:"e.g. Rahul AC Repair Services"}),
+        errs.nm&&React.createElement("div",{className:"em"},errs.nm)
+      ),
+      React.createElement("div",{style:{marginBottom:8}},
+        React.createElement("label",{className:"lbl"},"Pincode *"),
+        React.createElement("input",{value:pin,onChange:function(e){doPin(e.target.value.replace(/\D/g,"").slice(0,6));setErrs({});},className:"field"+(errs.pin?" err":""),placeholder:"6-digit pincode",type:"tel"}),
+        pinLoad&&React.createElement("div",{className:"pincode-loader"},React.createElement(Spin,null),"Detecting location..."),
+        city&&!pinLoad&&React.createElement("div",{style:{marginTop:10,display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:"rgba(52,211,153,.06)",border:"1px solid rgba(52,211,153,.2)",borderRadius:10}},
+          React.createElement("span",{style:{fontSize:16}},"📍"),
+          React.createElement("span",{style:{color:"var(--green)",fontWeight:600,fontSize:14}},city+" · "+pin)
+        ),
+        errs.pin&&React.createElement("div",{className:"em"},errs.pin)
+      ),
+      React.createElement("button",{onClick:s2,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15,marginTop:20}},"Save and Continue →")
+    ),
+    step===3&&React.createElement("div",{className:"au",style:{padding:"28px 20px"}},
+      React.createElement("h2",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Add Business Category"),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:20}},"Choose so customers can find you easily"),
+      React.createElement("div",{className:"cat-search-wrap",style:{marginBottom:16}},
+        React.createElement("div",{className:"psearch"},
+          React.createElement("span",{style:{color:"var(--t3)"}},"\uD83D\uDD0D"),
+          React.createElement("input",{value:catQ,onChange:function(e){setCatQ(e.target.value);setShowDrop(true);},onFocus:function(){setShowDrop(true);},placeholder:"Type business category...",style:{background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:15,flex:1}})
+        ),
+        showDrop&&filtered.length>0&&React.createElement("div",{className:"cat-dropdown"},
+          filtered.slice(0,7).map(function(c){return React.createElement("div",{key:c,className:"cat-opt",onClick:function(){addCat(c);}},React.createElement("span",{style:{fontSize:16}},"🏷️")," ",c);})
+        )
+      ),
+      selCats.length>0&&React.createElement("div",{style:{marginBottom:18}},
+        React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--t3)",marginBottom:10,letterSpacing:".5px",textTransform:"uppercase"}},"Selected ("+selCats.length+"/5)"),
+        React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:8}},
+          selCats.map(function(c){return React.createElement("div",{key:c,className:"cat-chip sel"},c,React.createElement("span",{className:"rem",onClick:function(){remCat(c);}},"×"));})
+        )
+      ),
+      errs.cat&&React.createElement("div",{className:"em",style:{marginBottom:10}},"⚠️ "+errs.cat),
+      React.createElement("div",{style:{marginBottom:20}},
+        React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--t3)",marginBottom:10,letterSpacing:".5px",textTransform:"uppercase"}},"Suggested"),
+        React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:8}},
+          SUGG.filter(function(c){return selCats.indexOf(c)<0;}).map(function(c){
+            return React.createElement("div",{key:c,className:"cat-chip",onClick:function(){addCat(c);}},c,React.createElement("span",{style:{color:"var(--c)",fontSize:16,marginLeft:2}},"+"));
+          })
+        )
+      ),
+      React.createElement("button",{onClick:s3,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15}},"Save and Continue →")
+    ),
+    step===4&&React.createElement("div",{className:"au"},
+      React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(251,191,36,.12),rgba(34,211,238,.06))",borderBottom:"1px solid rgba(251,191,36,.2)",padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}},
+        React.createElement("div",null,
+          React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--amber)",letterSpacing:"1px"}},"🌸 BIG SPRING SALE"),
+          React.createElement("div",{style:{color:"var(--amber)",fontWeight:700,fontSize:14}},"Up to 50% OFF")
+        ),
+        React.createElement("div",{className:"countdown"},
+          [{v:cd.h,l:"HRS"},{v:cd.m,l:"MIN"},{v:cd.s,l:"SEC"}].map(function(x){return React.createElement("div",{key:x.l,className:"cd-block"},React.createElement("div",{className:"cd-num"},x.v),React.createElement("div",{className:"cd-label"},x.l));})
+        )
+      ),
+      React.createElement("div",{style:{padding:"20px 16px 8px"}},
+        React.createElement("h2",{style:{fontSize:20,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Select Your Plan"),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:13}})
+      ),
+      React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14,padding:"0 16px 24px"}},
+        [{id:"free",name:"Starter",icon:"🌱",price:0,label:"Free Forever",color:"#475569",feats:[["5 leads/month",true],["Basic listing",true],["Standard placement",true],["Verified badge",false],["AI Coach",false]],badge:null},
+         {id:"growth",name:"Growth",icon:"📈",price:999,label:"Rs.999/month",color:"#22d3ee",feats:[["50 leads/month",true],["Verified badge",true],["Priority listing",true],["Analytics",true],["AI Coach",false]],badge:null},
+         {id:"pro",name:"Pro",icon:"⚡",price:2499,label:"Rs.2,499/month",color:"#818cf8",feats:[["200 leads/month",true],["AI Growth Coach",true],["Top 3 placement",true],["Competitor analysis",true],["Dedicated support",true]],badge:"MOST POPULAR"},
+         {id:"elite",name:"Elite",icon:"👑",price:4999,label:"Rs.4,999/month",color:"#fbbf24",feats:[["Unlimited leads",true],["Position #1",true],["Dedicated manager",true],["Custom banner ads",true],["White-glove setup",true]],badge:"MAX GROWTH"}
+        ].map(function(p){
+          var isSel=selPlan===p.id;
+          return React.createElement("div",{key:p.id,className:"plan-card"+(p.badge==="MOST POPULAR"?" popular":"")+(isSel?" selected":""),onClick:function(){setSelPlan(p.id);}},
+            p.badge&&React.createElement("div",{className:"plan-badge-top",style:{background:"linear-gradient(135deg,"+p.color+","+p.color+"bb)",color:"#fff"}},p.badge),
+            React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}},
+              React.createElement("div",null,
+                React.createElement("div",{style:{fontSize:22,marginBottom:2}},p.icon),
+                React.createElement("div",{style:{fontFamily:"Poppins",fontWeight:800,fontSize:16,color:p.color}},p.name),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},p.label)
+              ),
+              React.createElement("div",{style:{width:24,height:24,borderRadius:"50%",border:"2px solid "+(isSel?p.color:"var(--b2)"),display:"flex",alignItems:"center",justifyContent:"center",background:isSel?p.color:"transparent",transition:"all .2s"}},
+                isSel&&React.createElement("span",{style:{color:"#fff",fontSize:12,fontWeight:700}},"✓")
+              )
+            ),
+            p.feats.map(function(f){return React.createElement("div",{key:f[0],className:"plan-feature"},React.createElement("span",{className:f[1]?"tick":"cross"},f[1]?"✓":"✗"),f[0]);})
+          );
+        })
+      ),
+      React.createElement("div",{style:{padding:"0 16px 24px"}},
+        React.createElement("button",{onClick:finish,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Setting up..."):"Confirm & Go Live 🚀")
+      )
+    ),
+    step===5&&React.createElement("div",{className:"au",style:{padding:"40px 20px",textAlign:"center"}},
+      React.createElement("div",{style:{fontSize:72,marginBottom:16,animation:"float 2s ease-in-out infinite"}},"🎉"),
+      React.createElement("h2",{style:{fontSize:26,fontWeight:900,fontFamily:"Poppins",marginBottom:8,color:"var(--green)"}},"You're Live on Servora!"),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:15,lineHeight:1.7,marginBottom:28}},"Listing submitted for review. We'll approve within 24 hours."),
+      React.createElement("div",{style:{background:"rgba(52,211,153,.06)",border:"1px solid rgba(52,211,153,.2)",borderRadius:16,padding:20,marginBottom:24,textAlign:"left"}},
+        [["📋","Status","Under Review"],["⚡","Approval","< 24 Hours"],["📍","Location",city||"Pune"],["📦","Plan",selPlan.charAt(0).toUpperCase()+selPlan.slice(1)]].map(function(x){
+          return React.createElement("div",{key:x[1],className:"info-row"},
+            React.createElement("span",{style:{color:"var(--t2)",fontSize:13}},x[0]+" "+x[1]),
+            React.createElement("span",{style:{fontWeight:700,fontSize:13}},x[2])
+          );
+        })
+      ),
+      React.createElement("button",{onClick:function(){go("bizDash");},className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15,marginBottom:12}},"Go to My Dashboard →"),
+      React.createElement("button",{onClick:function(){go("listings");},className:"btn bo",style:{width:"100%",padding:"13px 0",borderRadius:14,fontSize:14}},"View All Listings")
+    )
+  );
+}
+
+/* =====================
+   ENHANCED USER DASHBOARD
+   ===================== */
+function UserDash(props){
+  var user=props.user,go=props.go;
+  var [tab,setTab]=useState("overview");
+  var [leads,setLeads]=useState([]);
+  var NOTIFS=[{icon:"⚡",text:"CleanMate Pro responded to your request",time:"2 min ago",read:false},{icon:"✅",text:"Dr. Priya Dental confirmed your appointment",time:"1 hr ago",read:false},{icon:"🌟",text:"Rate your recent FixIt Tech experience",time:"Yesterday",read:true}];
+  var SAVED=BIZ.slice(0,3);
+  var REQS=[{name:"CleanMate Pro",msg:"Need deep cleaning for 2BHK",status:"Replied",time:"2 hr ago",color:"#22d3ee",icon:"🏠"},{name:"Dr. Priya Dental",msg:"Dental checkup appointment",status:"Confirmed",time:"Yesterday",color:"#fb7185",icon:"🦷"},{name:"Radiance Beauty",msg:"Bridal package enquiry",status:"Pending",time:"2 days ago",color:"#f472b6",icon:"✂️"}];
+  var unread=NOTIFS.filter(function(n){return !n.read;}).length;
+  useEffect(function(){if(!user||!user.phone)return;sbGet("leads","?customer_phone=eq."+user.phone).then(function(d){if(d&&d.length>0)setLeads(d);});}, []);
+  var TABS=[{id:"overview",icon:"🏠",label:"Overview"},{id:"requests",icon:"📋",label:"Requests"},{id:"saved",icon:"❤️",label:"Saved"},{id:"notifs",icon:"🔔",label:"Alerts"},{id:"settings",icon:"⚙️",label:"Settings"}];
+  return React.createElement("div",{className:"page"},
+    React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(34,211,238,.06),rgba(129,140,248,.06))",borderBottom:"1px solid var(--b1)",padding:"24px 20px 20px"}},
+      React.createElement("div",{style:{display:"flex",gap:14,alignItems:"center",marginBottom:20}},
+        React.createElement("div",{style:{width:56,height:56,borderRadius:"50%",background:"linear-gradient(135deg,#22d3ee,#818cf8)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:24,color:"#fff",flexShrink:0}},(user.name||"U")[0]),
+        React.createElement("div",{style:{flex:1}},
+          React.createElement("div",{style:{fontWeight:800,fontSize:20,fontFamily:"Poppins"}},user.name||"My Account"),
+          React.createElement("div",{style:{color:"var(--t2)",fontSize:13}},"+91 "+(user.phone||"")),
+          React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6,marginTop:4}},React.createElement("span",{className:"badge bc"},"Customer"),React.createElement("span",{style:{fontSize:11,color:"var(--t3)"}},"Member since 2024"))
+        ),
+        React.createElement("button",{onClick:function(){setTab("notifs");},style:{position:"relative",background:"none",border:"none",cursor:"pointer",fontSize:22}},
+          "🔔",unread>0&&React.createElement("span",{className:"notif-badge"},unread)
+        )
+      ),
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}},
+        [{l:"Requests",v:REQS.length,c:"#22d3ee",i:"📋"},{l:"Saved",v:SAVED.length,c:"#818cf8",i:"❤️"},{l:"Reviews",v:2,c:"#fbbf24",i:"⭐"}].map(function(s){
+          return React.createElement("div",{key:s.l,style:{background:"rgba(255,255,255,.04)",borderRadius:12,padding:"12px 10px",textAlign:"center",border:"1px solid var(--b1)"}},
+            React.createElement("div",{style:{fontSize:16,marginBottom:2}},s.i),
+            React.createElement("div",{style:{fontWeight:800,fontSize:18,color:s.c,fontFamily:"Poppins"}},s.v),
+            React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},s.l)
+          );
+        })
+      )
+    ),
+    React.createElement("div",{style:{display:"flex",overflowX:"auto",borderBottom:"1px solid var(--b1)"}},
+      TABS.map(function(t){return React.createElement("button",{key:t.id,onClick:function(){setTab(t.id);},style:{flexShrink:0,padding:"12px 14px",background:"transparent",border:"none",borderBottom:tab===t.id?"2px solid var(--c)":"2px solid transparent",color:tab===t.id?"var(--c)":"var(--t3)",cursor:"pointer",fontSize:12,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}},
+        t.icon," ",t.label,t.id==="notifs"&&unread>0&&React.createElement("span",{style:{background:"var(--rose)",color:"#fff",borderRadius:999,fontSize:9,padding:"1px 5px"}},unread)
+      );})
+    ),
+    React.createElement("div",{style:{padding:"20px 20px 32px"}},
+      tab==="overview"&&React.createElement("div",null,
+        React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:12}},"Recent Activity"),
+        REQS.map(function(r){
+          return React.createElement("div",{key:r.name,className:"lead-card",style:{marginBottom:10}},
+            React.createElement("div",{style:{display:"flex",alignItems:"center",gap:12}},
+              React.createElement("div",{style:{width:38,height:38,borderRadius:12,background:r.color+"20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}},r.icon),
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:600,fontSize:14}},r.name),
+                React.createElement("div",{style:{color:"var(--t2)",fontSize:13,marginTop:2}},r.msg),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:12,marginTop:2}},r.time)
+              ),
+              React.createElement("span",{style:{fontSize:11,fontWeight:700,color:r.status==="Pending"?"var(--amber)":r.status==="Replied"?"var(--c)":"var(--green)"}},r.status)
+            )
+          );
+        }),
+        React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(34,211,238,.05),rgba(129,140,248,.04))",border:"1px solid var(--b2)",borderRadius:16,padding:18,marginTop:16}},
+          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:6}},"🤖 AI Service Finder"),
+          React.createElement("p",{style:{color:"var(--t2)",fontSize:13,lineHeight:1.6,marginBottom:12}},"Tell me what you need — I'll find the best match in Pune!"),
+          React.createElement("button",{onClick:function(){go("chat");},className:"btn bp",style:{width:"100%",padding:"12px 0",borderRadius:12,fontSize:14}},"Chat with AI →")
+        )
+      ),
+      tab==="requests"&&React.createElement("div",null,
+        REQS.map(function(r){
+          return React.createElement("div",{key:r.name,className:"lead-card",style:{marginBottom:12}},
+            React.createElement("div",{style:{display:"flex",gap:12,marginBottom:12}},
+              React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:r.color+"20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}},r.icon),
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:700,fontSize:14}},r.name),
+                React.createElement("div",{style:{color:"var(--t2)",fontSize:13,marginTop:2}},r.msg),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:12,marginTop:3}},r.time)
+              ),
+              React.createElement("span",{className:"lead-status",style:{background:r.status==="Pending"?"rgba(251,191,36,.1)":r.status==="Replied"?"rgba(34,211,238,.1)":"rgba(52,211,153,.1)",color:r.status==="Pending"?"var(--amber)":r.status==="Replied"?"var(--c)":"var(--green)"}},r.status)
+            ),
+            React.createElement("div",{style:{display:"flex",gap:8}},
+              React.createElement("button",{className:"btn bs",style:{flex:1,padding:"8px 0",borderRadius:9,fontSize:12}},"💬 WhatsApp"),
+              React.createElement("button",{className:"btn bo",style:{flex:1,padding:"8px 0",borderRadius:9,fontSize:12}},"📞 Call")
+            )
+          );
+        }),
+        React.createElement("button",{onClick:function(){go("listings");},className:"btn bp",style:{width:"100%",padding:"13px 0",borderRadius:13,fontSize:14,marginTop:4}},"Find More Services →")
+      ),
+      tab==="saved"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+        SAVED.map(function(b){return React.createElement(BizCard,{key:b.id,b:b,compact:true,onClick:function(){}});}),
+        React.createElement("button",{onClick:function(){go("listings");},className:"btn bo",style:{padding:"13px 0",borderRadius:13,fontSize:14,fontWeight:600}},"Explore More")
+      ),
+      tab==="notifs"&&React.createElement("div",null,
+        NOTIFS.map(function(n,i){
+          return React.createElement("div",{key:i,style:{display:"flex",gap:12,padding:"16px 0",borderBottom:"1px solid var(--b1)",opacity:n.read?.55:1}},
+            React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:"var(--s2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}},n.icon),
+            React.createElement("div",{style:{flex:1}},
+              React.createElement("div",{style:{fontSize:14,fontWeight:n.read?400:600,lineHeight:1.5}},n.text),
+              React.createElement("div",{style:{color:"var(--t3)",fontSize:12,marginTop:4}},n.time)
+            ),
+            !n.read&&React.createElement("div",{style:{width:8,height:8,borderRadius:"50%",background:"var(--c)",flexShrink:0,marginTop:6}})
+          );
+        })
+      ),
+      tab==="settings"&&React.createElement("div",null,
+        React.createElement("div",{className:"card",style:{padding:20,borderRadius:16,marginBottom:14}},
+          React.createElement("h4",{style:{fontWeight:700,marginBottom:14}},"Account Info"),
+          [["👤","Name",user.name||"Not set"],["📧","Email",user.email||"Not set"],["📱","Phone","+91 "+(user.phone||"")],["🎭","Role",user.role||"Customer"]].map(function(x){
+            return React.createElement("div",{key:x[1],className:"info-row"},
+              React.createElement("span",{style:{color:"var(--t2)",fontSize:13}},x[0]+" "+x[1]),
+              React.createElement("span",{style:{fontWeight:600,fontSize:13,color:"var(--t1)"}},x[2])
+            );
+          })
+        ),
+        React.createElement("div",{className:"card",style:{padding:20,borderRadius:16}},
+          React.createElement("h4",{style:{fontWeight:700,marginBottom:14}},"Preferences"),
+          [["🔔","Push Notifications",true],["📧","Email Alerts",true],["💬","WhatsApp Updates",false]].map(function(x,i){
+            var [on,setOn]=useState(x[2]);
+            return React.createElement("div",{key:i,className:"info-row"},
+              React.createElement("span",{style:{fontSize:13}},x[0]+" "+x[1]),
+              React.createElement("button",{onClick:function(){setOn(function(v){return !v;});},className:"sw",style:{background:on?"var(--c)":"var(--s3)"}},
+                React.createElement("div",{className:"sw-k",style:{left:on?24:3}})
+              )
+            );
+          })
+        )
+      )
+    )
+  );
+}
+
+/* =====================
+   ENHANCED BIZ DASHBOARD
+   ===================== */
+function BizDash(props){
+  var user=props.user;
+  var [tab,setTab]=useState("overview");
+  var [biz,setBiz]=useState(null);
+  var [leads,setLeads]=useState([]);
+  var [aiTip,setAiTip]=useState(""); var [aiLoad,setAiLoad]=useState(false);
+  var MOCK=[
+    {id:"l1",customer_name:"Rahul Sharma",customer_phone:"9876543210",message:"Deep cleaning for 2BHK in Koregaon Park",status:"new",created_at:new Date(Date.now()-7200000).toISOString()},
+    {id:"l2",customer_name:"Sneha Patil",customer_phone:"9765432109",message:"Monthly cleaning service required",status:"contacted",created_at:new Date(Date.now()-86400000).toISOString()},
+    {id:"l3",customer_name:"Amit Kumar",customer_phone:"9654321098",message:"Office cleaning in Hinjewadi",status:"new",created_at:new Date(Date.now()-172800000).toISOString()}
+  ];
+  useEffect(function(){
+    if(!user||!user.id)return;
+    sbGet("businesses","?owner_id=eq."+user.id+"&limit=1").then(function(d){
+      if(d&&d.length>0){setBiz(d[0]);sbGet("leads","?business_id=eq."+d[0].id+"&order=created_at.desc").then(function(l){if(l&&l.length>0)setLeads(l);else setLeads(MOCK);});}
+      else setLeads(MOCK);
+    }).catch(function(){setLeads(MOCK);});
+  }, []);
+  function doAI(){setAiLoad(true);callAI("Growth advisor for Indian local businesses. 3 numbered tips for more leads. Under 90 words.",(biz?biz.name:"my business")+" Pune").then(function(r){setAiTip(r);setAiLoad(false);});}
+  function markC(id){setLeads(function(l){return l.map(function(x){return x.id===id?Object.assign({},x,{status:"contacted"}):x;});});}
+  var disp=leads.length>0?leads:MOCK;
+  var newL=disp.filter(function(l){return l.status==="new";}).length;
+  var VIEWS=[24,38,19,52,41,67,44]; var maxV=Math.max.apply(null,VIEWS);
+  var DAYS=["M","T","W","T","F","S","S"];
+  var TABS=[{id:"overview",icon:"📊",label:"Overview"},{id:"leads",icon:"⚡",label:"Leads",count:newL},{id:"analytics",icon:"📈",label:"Stats"},{id:"ai",icon:"🤖",label:"AI"},{id:"profile",icon:"🏢",label:"Profile"},{id:"plans",icon:"⬆️",label:"Plans"}];
+  return React.createElement("div",{className:"page"},
+    React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(129,140,248,.08),rgba(34,211,238,.04))",borderBottom:"1px solid var(--b1)",padding:"20px 20px 16px"}},
+      React.createElement("div",{style:{display:"flex",gap:12,alignItems:"center",marginBottom:16}},
+        React.createElement("div",{style:{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,#818cf8,#22d3ee)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:22,color:"#fff",flexShrink:0}},biz?biz.name[0]:"B"),
+        React.createElement("div",{style:{flex:1}},
+          React.createElement("div",{style:{fontWeight:800,fontSize:18,fontFamily:"Poppins"}},biz?biz.name:"My Business"),
+          React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center",marginTop:3}},
+            React.createElement("span",{className:"badge "+(biz&&biz.plan==="elite"?"ba":biz&&biz.plan==="pro"?"bv":"bc")},((biz&&biz.plan)||"free").toUpperCase()),
+            React.createElement("span",{className:"badge "+(biz&&biz.status==="approved"?"bg2":"ba")},biz&&biz.status||"pending")
+          )
+        ),
+        React.createElement("div",{style:{textAlign:"right"}},
+          React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},newL>0?"New Leads":"All Clear"),
+          React.createElement("div",{style:{fontWeight:900,fontSize:26,color:"var(--c)",fontFamily:"Poppins"}},newL)
+        )
+      ),
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}},
+        [{l:"Leads",v:disp.length,c:"#22d3ee"},{l:"Views",v:285,c:"#818cf8"},{l:"Rating",v:biz?biz.rating||"4.7":"4.7",c:"#fbbf24"},{l:"Calls",v:42,c:"#34d399"}].map(function(s){
+          return React.createElement("div",{key:s.l,style:{background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"1px solid var(--b1)"}},
+            React.createElement("div",{style:{fontWeight:900,fontSize:16,color:s.c,fontFamily:"Poppins"}},s.v),
+            React.createElement("div",{style:{fontSize:10,color:"var(--t3)"}},s.l)
+          );
+        })
+      )
+    ),
+    React.createElement("div",{style:{display:"flex",overflowX:"auto",borderBottom:"1px solid var(--b1)"}},
+      TABS.map(function(t){return React.createElement("button",{key:t.id,onClick:function(){setTab(t.id);},style:{flexShrink:0,padding:"12px 10px",background:"transparent",border:"none",borderBottom:tab===t.id?"2px solid var(--c)":"2px solid transparent",color:tab===t.id?"var(--c)":"var(--t3)",cursor:"pointer",fontSize:11,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}},
+        t.icon," ",t.label,t.count>0&&React.createElement("span",{style:{background:"var(--rose)",color:"#fff",borderRadius:999,fontSize:9,padding:"1px 5px"}},t.count)
+      );})
+    ),
+    React.createElement("div",{style:{padding:"20px 20px 32px"}},
+      tab==="overview"&&React.createElement("div",null,
+        React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(34,211,238,.05),rgba(129,140,248,.05))",border:"1px solid var(--b2)",borderRadius:18,padding:18,marginBottom:18,display:"flex",gap:14,alignItems:"center"}},
+          React.createElement("div",{style:{position:"relative",width:72,height:72,flexShrink:0}},
+            React.createElement("svg",{width:72,height:72,viewBox:"0 0 72 72",style:{transform:"rotate(-90deg)"}},
+              React.createElement("circle",{cx:36,cy:36,r:30,fill:"none",stroke:"var(--s3)",strokeWidth:6}),
+              React.createElement("circle",{cx:36,cy:36,r:30,fill:"none",stroke:"var(--c)",strokeWidth:6,strokeDasharray:"188.4",strokeDashoffset:"56.5",strokeLinecap:"round"})
+            ),
+            React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}},
+              React.createElement("div",{style:{fontWeight:900,fontSize:18,color:"var(--c)",lineHeight:1}},"70"),
+              React.createElement("div",{style:{fontSize:9,color:"var(--t3)"}},"/100")
+            )
+          ),
+          React.createElement("div",{style:{flex:1}},
+            React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:4}},"Listing Health"),
+            React.createElement("div",{style:{color:"var(--t2)",fontSize:12,lineHeight:1.6,marginBottom:8}},"Add photos to reach 90+"),
+            [["Add 5 photos",false],["Complete profile",false],["Get verified",true],["First 5 reviews",true]].map(function(x){
+              return React.createElement("div",{key:x[0],style:{display:"flex",alignItems:"center",gap:6,marginBottom:3}},
+                React.createElement("span",{style:{color:x[1]?"var(--green)":"var(--b3)",fontSize:11}},x[1]?"✓":"○"),
+                React.createElement("span",{style:{fontSize:11,color:x[1]?"var(--t2)":"var(--t3)",textDecoration:x[1]?"line-through":"none"}},x[0])
+              );
+            })
+          )
+        ),
+        React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:10}},"Recent Leads"),
+        disp.slice(0,3).map(function(l){
+          return React.createElement("div",{key:l.id,className:"lead-card",style:{marginBottom:10}},
+            React.createElement("div",{style:{display:"flex",gap:10,marginBottom:10}},
+              React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#22d3ee22,#818cf822)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}},l.customer_name&&l.customer_name[0]||"?"),
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:600,fontSize:14}},l.customer_name||"Customer"),
+                React.createElement("div",{style:{color:"var(--t2)",fontSize:12,marginTop:2}},l.message||"Enquiry"),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:11,marginTop:2}},new Date(l.created_at).toLocaleDateString("en-IN"))
+              ),
+              React.createElement("span",{className:"lead-status",style:{background:l.status==="new"?"rgba(129,140,248,.1)":"rgba(52,211,153,.1)",color:l.status==="new"?"var(--v)":"var(--green)"}},l.status==="new"?"🆕":"✓")
+            ),
+            React.createElement("div",{style:{display:"flex",gap:8}},
+              React.createElement("button",{onClick:function(){window.open("https://wa.me/91"+l.customer_phone,"_blank");},className:"btn bs",style:{flex:1,padding:"8px 0",borderRadius:8,fontSize:12}},"💬 WhatsApp"),
+              React.createElement("button",{onClick:function(){markC(l.id);},className:"btn bo",style:{flex:1,padding:"8px 0",borderRadius:8,fontSize:12}},"✓ Done")
+            )
+          );
+        })
+      ),
+      tab==="leads"&&React.createElement("div",null,
+        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}},
+          [["⚡",disp.length,"Total","#22d3ee"],["🆕",newL,"New","#818cf8"],["✅",disp.length-newL,"Done","#34d399"]].map(function(x){
+            return React.createElement("div",{key:x[2],style:{padding:"14px 8px",background:x[3]+"08",border:"1px solid "+x[3]+"25",borderRadius:14,textAlign:"center"}},
+              React.createElement("div",{style:{fontSize:16}},x[0]),
+              React.createElement("div",{style:{fontWeight:800,fontSize:20,color:x[3]}},x[1]),
+              React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},x[2])
+            );
+          })
+        ),
+        disp.map(function(l){
+          return React.createElement("div",{key:l.id,className:"lead-card",style:{marginBottom:10}},
+            React.createElement("div",{style:{display:"flex",gap:10,marginBottom:10}},
+              React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#22d3ee22,#818cf822)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16}},l.customer_name&&l.customer_name[0]||"?"),
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:700,fontSize:14}},l.customer_name||"Customer"),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},l.customer_phone+" · "+new Date(l.created_at).toLocaleDateString("en-IN")),
+                l.message&&React.createElement("div",{style:{color:"var(--t2)",fontSize:12,marginTop:3}},l.message)
+              ),
+              React.createElement("span",{className:"lead-status",style:{background:l.status==="new"?"rgba(129,140,248,.12)":"rgba(52,211,153,.12)",color:l.status==="new"?"var(--v)":"var(--green)"}},l.status==="new"?"New":"Done")
+            ),
+            React.createElement("div",{style:{display:"flex",gap:8}},
+              React.createElement("button",{onClick:function(){window.open("https://wa.me/91"+l.customer_phone,"_blank");},className:"btn bs",style:{flex:1,padding:"9px 0",borderRadius:9,fontSize:12}},"💬 WhatsApp"),
+              React.createElement("button",{onClick:function(){window.open("tel:+91"+l.customer_phone);},className:"btn bo",style:{flex:1,padding:"9px 0",borderRadius:9,fontSize:12}},"📞 Call"),
+              React.createElement("button",{onClick:function(){markC(l.id);},className:"btn bg",style:{padding:"9px 12px",borderRadius:9,fontSize:12,color:"var(--green)"}},"✓")
+            )
+          );
+        })
+      ),
+      tab==="analytics"&&React.createElement("div",null,
+        React.createElement("div",{style:{background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16,padding:"16px 12px",marginBottom:16}},
+          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"📊 Views This Week"),
+          React.createElement("div",{className:"bar-chart"},
+            VIEWS.map(function(v,i){
+              return React.createElement("div",{key:i,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}},
+                React.createElement("div",{style:{width:"100%",height:(v/maxV*44)+"px",background:"linear-gradient(to top,var(--vd),var(--c))",borderRadius:"4px 4px 0 0"}}),
+                React.createElement("div",{style:{fontSize:9,color:"var(--t3)"}},DAYS[i])
+              );
+            })
+          )
+        ),
+        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}},
+          [{l:"Profile Views",v:"285",t:"+23% ↑",up:true,c:"#22d3ee"},{l:"WhatsApp Taps",v:"48",t:"+12% ↑",up:true,c:"#34d399"},{l:"Calls Received",v:"31",t:"-5% ↓",up:false,c:"#fbbf24"},{l:"Quotes Sent",v:"17",t:"+31% ↑",up:true,c:"#818cf8"}].map(function(s){
+            return React.createElement("div",{key:s.l,className:"stat-big"},
+              React.createElement("div",{style:{color:"var(--t3)",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}},s.l),
+              React.createElement("div",{style:{fontWeight:900,fontSize:28,color:s.c,fontFamily:"Poppins",lineHeight:1,animation:"countUp .5s ease"}},s.v),
+              React.createElement("div",{className:"stat-trend "+(s.up?"up":"down")},s.t)
+            );
+          })
+        ),
+        React.createElement("div",{style:{background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16,padding:16}},
+          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"Lead Sources"),
+          [["WhatsApp",65,"#34d399"],["Direct Call",20,"#22d3ee"],["Quote Form",15,"#818cf8"]].map(function(x){
+            return React.createElement("div",{key:x[0],style:{marginBottom:12}},
+              React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:4}},
+                React.createElement("span",{style:{fontSize:13,color:"var(--t2)"}},x[0]),
+                React.createElement("span",{style:{fontSize:13,fontWeight:700,color:x[2]}},x[1]+"%")
+              ),
+              React.createElement("div",{style:{height:5,background:"var(--s3)",borderRadius:3}},
+                React.createElement("div",{style:{height:"100%",width:x[1]+"%",background:x[2],borderRadius:3}})
+              )
+            );
+          })
+        )
+      ),
+      tab==="ai"&&React.createElement("div",null,
+        React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(34,211,238,.06),rgba(129,140,248,.06))",border:"1px solid rgba(34,211,238,.2)",borderRadius:20,padding:24,textAlign:"center",marginBottom:16}},
+          React.createElement("div",{style:{fontSize:48,marginBottom:10}},"🤖"),
+          React.createElement("h3",{style:{fontWeight:800,fontSize:20,marginBottom:6,fontFamily:"Poppins"}},"AI Business Coach"),
+          React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.7,marginBottom:20}},"Personalized growth strategy powered by Claude AI")
+        ),
+        aiTip?React.createElement("div",{className:"ann-banner",style:{marginBottom:16}},
+          React.createElement("span",{style:{fontSize:24}},"💡"),
+          React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.9,whiteSpace:"pre-wrap"}},aiTip)
+        ):aiLoad?React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:24}},React.createElement(DL,null)):null,
+        React.createElement("button",{onClick:doAI,disabled:aiLoad,className:"btn bp",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}},"🚀 Get AI Growth Plan"),
+        React.createElement("div",{style:{marginTop:20}},
+          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"Quick Tips"),
+          [["📸","Add 5+ photos → 3x more enquiries"],["⏰","Reply in 5 min → higher ranking"],["✅","Complete KYC → Verified badge"],["🌟","Ask customers → leave reviews"]].map(function(x){
+            return React.createElement("div",{key:x[0],style:{display:"flex",gap:10,padding:"12px 0",borderBottom:"1px solid var(--b1)"}},
+              React.createElement("span",{style:{fontSize:18}}),
+              React.createElement("div",null,React.createElement("span",{style:{fontSize:16,marginRight:8}},x[0]),React.createElement("span",{style:{fontSize:13,color:"var(--t2)"}},x[1]))
+            );
+          })
+        )
+      ),
+      tab==="profile"&&React.createElement("div",null,
+        [["Business Name",biz&&biz.name||""],["Category",biz&&(biz.category||biz.cat)||""],["Location",biz&&(biz.location||biz.loc)||""],["Phone",biz&&biz.phone||""],["Website",""]].map(function(x){
+          return React.createElement("div",{key:x[0],style:{marginBottom:14}},React.createElement("label",{className:"lbl"},x[0]),React.createElement("input",{className:"field",defaultValue:x[1],placeholder:"Enter "+x[0]}));
+        }),
+        React.createElement("div",{style:{marginBottom:14}},React.createElement("label",{className:"lbl"},"About"),React.createElement("textarea",{className:"field",rows:4,defaultValue:biz&&biz.description||"",placeholder:"Describe your services...",style:{resize:"none"}})),
+        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
+          React.createElement("div",null,React.createElement("label",{className:"lbl"},"Opens"),React.createElement("input",{className:"field",defaultValue:"09:00",type:"time"})),
+          React.createElement("div",null,React.createElement("label",{className:"lbl"},"Closes"),React.createElement("input",{className:"field",defaultValue:"20:00",type:"time"}))
+        ),
+        React.createElement("button",{className:"btn bp",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15}},"💾 Save Changes")
+      ),
+      tab==="plans"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+        PLANS.map(function(p){
+          var isCur=biz&&biz.plan===p.id;
+          return React.createElement("div",{key:p.id,className:"plan-card"+(p.popular?" popular":"")+(isCur?" selected":"")},
+            p.popular&&React.createElement("div",{className:"plan-badge-top",style:{background:"linear-gradient(90deg,#818cf8,#22d3ee)",color:"#fff"}},"MOST POPULAR"),
+            React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}},
+              React.createElement("div",null,
+                React.createElement("div",{style:{fontFamily:"Poppins",fontWeight:800,fontSize:17,color:p.color}},p.name),
+                React.createElement("div",null,React.createElement("span",{style:{fontSize:22,fontWeight:900,color:p.color}},"Rs."+p.price.toLocaleString()),React.createElement("span",{style:{color:"var(--t3)",fontSize:12}},"/month"))
+              ),
+              React.createElement("div",{style:{textAlign:"right"}},React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},"Leads/month"),React.createElement("div",{style:{fontWeight:800,fontSize:18,color:p.color}},p.leads>999?"∞":p.leads))
+            ),
+            p.features.map(function(f){return React.createElement("div",{key:f,className:"plan-feature"},React.createElement("span",{className:"tick"},"✓"),f);}),
+            React.createElement("button",{className:"btn bp",disabled:isCur||p.id==="free",style:{width:"100%",padding:"12px 0",borderRadius:12,fontSize:14,marginTop:14,opacity:(isCur||p.id==="free")?0.5:1}},isCur?"✓ Current Plan":p.id==="free"?"Free Plan":"Upgrade → Contact Support")
+          );
+        })
+      )
+    )
+  );
+}
+
+/* =====================
+   PREMIUM ADMIN PANEL
+   ===================== */
+function AdminPanel(){
+  var [tab,setTab]=useState("overview");
+  var [bizList,setBizList]=useState([]);
+  var [users,setUsers]=useState([]);
+  var [leads,setLeads]=useState([]);
+  var [loading,setLoading]=useState(true);
+  var [aiMod,setAiMod]=useState(""); var [aiModLoad,setAiModLoad]=useState(false);
+  var [banner,setBanner]=useState(""); var [bannerSent,setBannerSent]=useState(false);
+  var [stats,setStats]=useState({u:0,b:0,l:0,r:0});
+  var [search,setSearch]=useState("");
+  useEffect(function(){
+    Promise.all([sbGet("businesses","?order=created_at.desc"),sbGet("users","?order=created_at.desc"),sbGet("leads","?order=created_at.desc&limit=100")]).then(function(r){
+      var biz=r[0]&&r[0].length>0?r[0]:BIZ;
+      var usr=r[1]||[]; var led=r[2]||[];
+      setBizList(biz);setUsers(usr);setLeads(led);
+      setStats({u:usr.length||5,b:biz.length,l:led.length||24,r:biz.reduce(function(a,b){return a+(b.plan==="elite"?4999:b.plan==="pro"?2499:b.plan==="growth"?999:0);},0)});
+      setLoading(false);
+    }).catch(function(){setBizList(BIZ);setLoading(false);});
+  }, []);
+  function approve(id){sbPatch("businesses","id",id,{status:"approved"});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{status:"approved"}):b;});});}
+  function reject(id){sbPatch("businesses","id",id,{status:"rejected"});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{status:"rejected"}):b;});});}
+  function verify(id){sbPatch("businesses","id",id,{verified:true});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{verified:true}):b;});});}
+  function blockU(id,blk){sbPatch("users","id",id,{blocked:!blk});setUsers(function(l){return l.map(function(u){return u.id===id?Object.assign({},u,{blocked:!blk}):u;});});}
+  function doAIMod(){setAiModLoad(true);callAI("Content moderator. Detect fake reviews/spam. Under 80 words.","1. BEST EVER BOOK NOW!!! new account\n2. AC repaired well fair price\n3. SCAM 5 reviews today same IP\n4. Good job minor delay satisfied").then(function(r){setAiMod(r);setAiModLoad(false);});}
+  function sendBanner(){if(!banner.trim())return;sbPost("announcements",{message:banner,active:true});setBanner("");setBannerSent(true);setTimeout(function(){setBannerSent(false);},3000);}
+  var pending=bizList.filter(function(b){return b.status==="pending";});
+  var filtBiz=search?bizList.filter(function(b){return b.name&&b.name.toLowerCase().indexOf(search.toLowerCase())>=0;}):bizList;
+  var LEAD_D=[4,7,3,12,8,15,9]; var maxL=Math.max.apply(null,LEAD_D);
+  var DAYS2=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  var TABS=[{id:"overview",icon:"📊",label:"Overview"},{id:"businesses",icon:"🏢",label:"Biz",count:pending.length},{id:"users",icon:"👥",label:"Users"},{id:"leads",icon:"⚡",label:"Leads"},{id:"ai-mod",icon:"🛡️",label:"AI Mod"},{id:"announce",icon:"📢",label:"Announce"}];
+  if(loading)return React.createElement("div",{style:{padding:60,textAlign:"center"}},React.createElement(DL,null));
+  return React.createElement("div",{className:"page"},
+    React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(251,113,133,.06),rgba(129,140,248,.06))",borderBottom:"1px solid var(--b1)",padding:"20px 20px 16px"}},
+      React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}},
+        React.createElement("div",null,
+          React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:2}},
+            React.createElement("span",{style:{fontWeight:800,fontSize:22,fontFamily:"Poppins"}},"Admin Center"),
+            React.createElement("span",{className:"badge br"},"SUPER ADMIN")
+          ),
+          React.createElement("span",{style:{color:"var(--t3)",fontSize:12}},"Servora · Pune")
+        ),
+        React.createElement("button",{onClick:function(){window.location.reload();},className:"btn bo",style:{padding:"8px 14px",borderRadius:10,fontSize:12}},"🔄 Refresh")
+      ),
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}},
+        [{l:"Total Users",v:stats.u,i:"👥",c:"#22d3ee",t:"+12% ↑"},{l:"Businesses",v:stats.b,i:"🏢",c:"#818cf8",t:"+8% ↑"},{l:"Revenue",v:"Rs."+stats.r.toLocaleString("en-IN"),i:"💰",c:"#fbbf24",t:"+24% ↑"},{l:"Leads",v:stats.l,i:"⚡",c:"#34d399",t:"+31% ↑"}].map(function(s){
+          return React.createElement("div",{key:s.l,className:"stat-big"},
+            React.createElement("div",{style:{fontSize:20,marginBottom:6}},s.i),
+            React.createElement("div",{style:{fontWeight:900,fontSize:20,color:s.c,fontFamily:"Poppins",lineHeight:1,animation:"countUp .5s ease"}},s.v),
+            React.createElement("div",{className:"stat-trend up",style:{marginTop:4}},s.t),
+            React.createElement("div",{style:{fontSize:10,color:"var(--t3)",marginTop:3}},s.l)
+          );
+        })
+      )
+    ),
+    React.createElement("div",{style:{display:"flex",overflowX:"auto",borderBottom:"1px solid var(--b1)"}},
+      TABS.map(function(t){return React.createElement("button",{key:t.id,onClick:function(){setTab(t.id);},style:{flexShrink:0,padding:"12px 10px",background:"transparent",border:"none",borderBottom:tab===t.id?"2px solid var(--c)":"2px solid transparent",color:tab===t.id?"var(--c)":"var(--t3)",cursor:"pointer",fontSize:11,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}},
+        t.icon," ",t.label,t.count>0&&React.createElement("span",{style:{background:"var(--rose)",color:"#fff",borderRadius:999,fontSize:9,padding:"1px 5px"}},t.count)
+      );})
+    ),
+    React.createElement("div",{style:{padding:"20px 20px 32px"}},
+      tab==="overview"&&React.createElement("div",null,
+        React.createElement("div",{style:{background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16,padding:16,marginBottom:16}},
+          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"📈 Leads This Week"),
+          React.createElement("div",{className:"bar-chart"},
+            LEAD_D.map(function(v,i){
+              return React.createElement("div",{key:i,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}},
+                React.createElement("div",{style:{width:"100%",height:(v/maxL*44)+"px",background:"linear-gradient(to top,var(--vd),var(--c))",borderRadius:"4px 4px 0 0"}}),
+                React.createElement("div",{style:{fontSize:9,color:"var(--t3)"}},DAYS2[i])
+              );
+            })
+          )
+        ),
+        React.createElement("div",{className:"card",style:{padding:18,borderRadius:16,marginBottom:16}},
+          React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},
+            React.createElement("h4",{style:{fontWeight:700,fontSize:14}},"⏳ Pending ("+pending.length+")"),
+            pending.length>0&&React.createElement("button",{onClick:function(){setTab("businesses");},style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:12,fontWeight:600}},"View All →")
+          ),
+          pending.length===0?React.createElement("p",{style:{color:"var(--t3)",fontSize:13}},"✓ All caught up!"):
+          pending.slice(0,3).map(function(b){
+            return React.createElement("div",{key:b.id,style:{display:"flex",alignItems:"center",gap:10,padding:"12px 0",borderBottom:"1px solid var(--b1)"}},
+              React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#22d3ee22,#818cf822)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}},b.name&&b.name[0]||"B"),
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:600,fontSize:13}},b.name),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},(b.category||b.cat||"")+" · "+(b.location||b.loc||"Pune"))
+              ),
+              React.createElement("div",{style:{display:"flex",gap:6}},
+                React.createElement("button",{onClick:function(){approve(b.id);},className:"btn bs",style:{width:32,height:32,borderRadius:8,padding:0,fontSize:14}},"✓"),
+                React.createElement("button",{onClick:function(){reject(b.id);},className:"btn bd",style:{width:32,height:32,borderRadius:8,padding:0,fontSize:14}},"✗")
+              )
+            );
+          })
+        ),
+        React.createElement("div",{className:"card",style:{padding:18,borderRadius:16}},
+          React.createElement("h4",{style:{fontWeight:700,fontSize:14,marginBottom:14}},"💰 Revenue by Plan"),
+          PLANS.map(function(p){var cnt=bizList.filter(function(b){return b.plan===p.id;}).length;return React.createElement("div",{key:p.id,className:"info-row"},
+            React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8}},
+              React.createElement("div",{style:{width:10,height:10,borderRadius:2,background:p.color}}),
+              React.createElement("span",{style:{fontSize:13,color:"var(--t2)"}},p.name),
+              React.createElement("span",{className:"badge",style:{background:p.color+"15",color:p.color,border:"none",fontSize:9}},cnt+" biz")
+            ),
+            React.createElement("span",{style:{fontWeight:700,fontSize:13,color:"var(--green)"}},"Rs."+(cnt*p.price).toLocaleString("en-IN"))
+          );})
+        )
+      ),
+      tab==="businesses"&&React.createElement("div",null,
+        React.createElement("div",{className:"psearch",style:{marginBottom:14}},
+          React.createElement("span",{style:{color:"var(--t3)"}},"\uD83D\uDD0D"),
+          React.createElement("input",{value:search,onChange:function(e){setSearch(e.target.value);},placeholder:"Search businesses...",style:{background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:14,flex:1}})
+        ),
+        React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:10}},
+          filtBiz.map(function(b){
+            return React.createElement("div",{key:b.id,className:"card",style:{padding:16,borderRadius:14}},
+              React.createElement("div",{style:{display:"flex",gap:10,marginBottom:10}},
+                React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:"var(--s2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}},b.icon||"🏢"),
+                React.createElement("div",{style:{flex:1}},
+                  React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center",marginBottom:2}},
+                    React.createElement("span",{style:{fontWeight:700,fontSize:14}},b.name),b.verified&&React.createElement("span",{style:{fontSize:11}},"✅")
+                  ),
+                  React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},(b.category||b.cat||"")+" · "+(b.location||b.loc||"Pune")),
+                  React.createElement("div",{style:{display:"flex",gap:4,marginTop:4}},
+                    React.createElement("span",{className:"badge "+(b.plan==="elite"?"ba":b.plan==="pro"?"bv":"bc"),style:{fontSize:9}},b.plan||"free"),
+                    React.createElement("span",{className:"badge "+(b.status==="approved"?"bg2":b.status==="rejected"?"br":"ba"),style:{fontSize:9}},b.status||"pending")
+                  )
+                )
+              ),
+              React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
+                b.status!=="approved"&&React.createElement("button",{onClick:function(){approve(b.id);},className:"btn bs",style:{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,minWidth:60}},"✓ Approve"),
+                b.status!=="rejected"&&React.createElement("button",{onClick:function(){reject(b.id);},className:"btn bd",style:{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,minWidth:60}},"✗ Reject"),
+                !b.verified&&React.createElement("button",{onClick:function(){verify(b.id);},className:"btn bw",style:{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,minWidth:60}},"✅ Verify")
+              )
+            );
+          })
+        )
+      ),
+      tab==="users"&&React.createElement("div",null,
+        users.length===0?React.createElement("div",{style:{textAlign:"center",padding:40,color:"var(--t3)"}},
+          React.createElement("div",{style:{fontSize:40,marginBottom:10}},"👥"),
+          React.createElement("div",{style:{fontSize:14,fontWeight:600}},"No users yet"),
+          React.createElement("p",{style:{fontSize:12,marginTop:6}},"Users appear here after signup")
+        ):
+        React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:10}},
+          users.map(function(u){
+            return React.createElement("div",{key:u.id,className:"card",style:{padding:14,borderRadius:14,display:"flex",gap:10,alignItems:"center"}},
+              React.createElement("div",{style:{width:40,height:40,borderRadius:"50%",background:"linear-gradient(135deg,rgba(34,211,238,.2),rgba(129,140,248,.2))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}},u.name&&u.name[0]||"👤"),
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:600,fontSize:13}},u.name||u.phone),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},u.phone),
+                React.createElement("div",{style:{display:"flex",gap:4,marginTop:3}},
+                  React.createElement("span",{className:"badge "+(u.role==="admin"?"ba":u.role==="business"?"bc":"bg2"),style:{fontSize:9}},u.role),
+                  u.blocked&&React.createElement("span",{className:"badge br",style:{fontSize:9}},"BLOCKED")
+                )
+              ),
+              u.role!=="admin"&&React.createElement("button",{onClick:function(){blockU(u.id,u.blocked);},className:"btn "+(u.blocked?"bs":"bd"),style:{padding:"7px 12px",borderRadius:8,fontSize:11,fontWeight:700}},u.blocked?"Unblock":"Block")
+            );
+          })
+        )
+      ),
+      tab==="leads"&&React.createElement("div",null,
+        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}},
+          [["Total",leads.length||24,"#22d3ee"],["New",leads.filter(function(l){return l.status==="new";}).length||14,"#818cf8"],["Done",Math.max(0,(leads.length||24)-(leads.filter(function(l){return l.status==="new";}).length||14)),"#34d399"]].map(function(x){
+            return React.createElement("div",{key:x[0],style:{padding:"14px 8px",background:x[2]+"08",border:"1px solid "+x[2]+"25",borderRadius:14,textAlign:"center"}},
+              React.createElement("div",{style:{fontWeight:800,fontSize:22,color:x[2]}},x[1]),
+              React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},x[0])
+            );
+          })
+        ),
+        leads.length===0?React.createElement("div",{style:{textAlign:"center",padding:40,color:"var(--t3)"}},React.createElement("div",{style:{fontSize:40}},"⚡"),React.createElement("div",{style:{fontSize:14,marginTop:8}},"Leads appear here as businesses receive enquiries")):
+        leads.map(function(l){return React.createElement("div",{key:l.id,className:"card",style:{padding:14,borderRadius:13,marginBottom:8}},
+          React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:4}},React.createElement("span",{style:{fontWeight:600,fontSize:13}},l.customer_name||"Anonymous"),React.createElement("span",{className:"badge "+(l.status==="new"?"bv":"bg2"),style:{fontSize:10}},l.status)),
+          React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},l.customer_phone+" · "+new Date(l.created_at).toLocaleDateString("en-IN")),
+          l.message&&React.createElement("div",{style:{color:"var(--t2)",fontSize:12,marginTop:4}},l.message)
+        );})
+      ),
+      tab==="ai-mod"&&React.createElement("div",null,
+        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}},
+          [["🚨","Flagged","2","var(--rose)"],["✅","Clean",leads.length||22,"var(--green)"],["🔍","Pending",pending.length,"var(--amber)"]].map(function(x){
+            return React.createElement("div",{key:x[1],style:{padding:"14px 8px",background:x[3]+"08",border:"1px solid "+x[3]+"25",borderRadius:14,textAlign:"center"}},
+              React.createElement("div",{style:{fontSize:18}},x[0]),
+              React.createElement("div",{style:{fontWeight:800,fontSize:20,color:x[3]}},x[2]),
+              React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},x[1])
+            );
+          })
+        ),
+        React.createElement("div",{style:{padding:22,background:"rgba(251,113,133,.03)",border:"1px solid rgba(251,113,133,.15)",borderRadius:18,marginBottom:14}},
+          React.createElement("h4",{style:{fontWeight:700,fontSize:15,marginBottom:8}},"🛡️ AI Review Scanner"),
+          React.createElement("p",{style:{color:"var(--t2)",fontSize:13,lineHeight:1.7,marginBottom:14}},"Auto-detect fake reviews, spam and coordinated attacks."),
+          aiMod?React.createElement("div",{className:"ann-banner",style:{marginBottom:12}},React.createElement("span",{style:{fontSize:20}},"🤖"),React.createElement("p",{style:{color:"var(--t2)",fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}},aiMod)):
+          aiModLoad?React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:8}},React.createElement(DL,null)):null,
+          React.createElement("button",{onClick:doAIMod,disabled:aiModLoad,className:"btn bp",style:{width:"100%",padding:"13px 0",borderRadius:12,fontSize:14}},"🛡️ Run AI Scan")
+        ),
+        React.createElement("div",{className:"card",style:{padding:18,borderRadius:16}},
+          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"🚫 Flagged Content"),
+          [["Fake Review","5-star paid review detected","CleanMate Pro","2 hr ago"],["Spam Leads","12 fake leads same IP","FixIt Tech","Yesterday"]].map(function(x){
+            return React.createElement("div",{key:x[0],style:{display:"flex",gap:10,padding:"12px 0",borderBottom:"1px solid var(--b1)"}},
+              React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"rgba(251,113,133,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}},"🚨"),
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:600,fontSize:13}},x[0]),
+                React.createElement("div",{style:{color:"var(--t2)",fontSize:12}},x[1]),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},x[2]+" · "+x[3])
+              ),
+              React.createElement("button",{className:"btn bd",style:{padding:"6px 10px",borderRadius:8,fontSize:11}},"Remove")
+            );
+          })
+        )
+      ),
+      tab==="announce"&&React.createElement("div",null,
+        bannerSent&&React.createElement("div",{className:"abox aok",style:{marginBottom:16}},"✅ Announcement sent to all users!"),
+        React.createElement("div",{className:"card",style:{padding:20,borderRadius:16,marginBottom:14}},
+          React.createElement("h4",{style:{fontWeight:700,fontSize:15,marginBottom:12}},"📢 Send Announcement"),
+          React.createElement("label",{className:"lbl"},"Message"),
+          React.createElement("textarea",{value:banner,onChange:function(e){setBanner(e.target.value);},className:"field",rows:4,placeholder:"Write announcement...",style:{marginBottom:14,resize:"none"}}),
+          React.createElement("button",{onClick:sendBanner,disabled:!banner.trim(),className:"btn bp",style:{width:"100%",padding:"13px 0",borderRadius:12,fontSize:14}},"📤 Send to All Users")
+        ),
+        React.createElement("div",{className:"card",style:{padding:20,borderRadius:16}},
+          React.createElement("h4",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"Recent Announcements"),
+          [["🌸 Big Spring Sale","Up to 50% off on paid plans","2 days ago"],["🆕 AI Coach Live","AI Business Coach now available","1 week ago"],["⚠️ Maintenance","Scheduled 2am-4am Sunday","2 weeks ago"]].map(function(x){
+            return React.createElement("div",{key:x[0],className:"ann-banner",style:{marginBottom:10}},
+              React.createElement("div",{style:{flex:1}},
+                React.createElement("div",{style:{fontWeight:700,fontSize:13}},x[0]),
+                React.createElement("div",{style:{color:"var(--t2)",fontSize:12,marginTop:2}},x[1]),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:11,marginTop:4}},x[2])
+              )
+            );
+          })
+        )
+      )
+    )
+  );
+}
+
+/* =====================
+   ROOT APP (updated routing)
+   ===================== */
+function App(){
+  var [page,setPage]=useState("home"); var [user,setUser]=useState(null);
+  var [selBiz,setSelBiz]=useState(null); var [chatOpen,setChatOpen]=useState(false);
+  function go(p){
+    if(p==="chat"){setChatOpen(true);return;}
+    if(p==="biz-onboard"){setPage("biz-onboard");window.scrollTo({top:0,behavior:"smooth"});return;}
+    if(p==="dashboard"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business")setPage("bizDash");else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
+    if(p==="account"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business")setPage("bizDash");else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
+    setPage(p);window.scrollTo({top:0,behavior:"smooth"});
+  }
+  function renderPage(){
+    if(page==="home")        return React.createElement(HomePage,       {go:go,setBiz:setSelBiz});
+    if(page==="listings")    return React.createElement(ListingsPage,   {go:go,setBiz:setSelBiz});
+    if(page==="detail")      return React.createElement(DetailPage,     {b:selBiz,go:go});
+    if(page==="login")       return React.createElement(AuthPage,       {setUser:setUser,go:go});
+    if(page==="biz-onboard") return React.createElement(BusinessOnboard,{setUser:setUser,go:go});
+    if(page==="dash")        return user?React.createElement(UserDash,  {user:user,go:go}):React.createElement(AuthPage,{setUser:setUser,go:go});
+    if(page==="bizDash")     return user?React.createElement(BizDash,   {user:user,go:go}):React.createElement(AuthPage,{setUser:setUser,go:go});
+    if(page==="admin")       return user&&user.role==="admin"?React.createElement(AdminPanel,null):React.createElement(AuthPage,{setUser:setUser,go:go});
+    return React.createElement(HomePage,{go:go,setBiz:setSelBiz});
+  }
+  return React.createElement("div",null,
+    React.createElement(TopBar,    {page:page,go:go,user:user,setUser:setUser}),
+    React.createElement("main",    null,renderPage()),
+    React.createElement(BottomNav, {page:page,go:go,user:user}),
+    chatOpen&&React.createElement(AiChat,{onClose:function(){setChatOpen(false);}}),
+    (page==="home"||page==="listings")&&React.createElement("button",{className:"fab",onClick:function(){go("biz-onboard");}},"\uD83C\uDFEA")
+  );
+}
+
+/* MOUNT */
+var root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App,null));
+</script>
+</body>
+</html>
 </head>
 <body>
 <div id="root"></div>
