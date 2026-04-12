@@ -279,6 +279,37 @@ if (FIREBASE_OK) {
 var ADMIN_PHONES = ["8767282776"];
 
 /* =====================
+   GOOGLE AUTH HELPER
+   ===================== */
+function handleGoogleUser(fireUser, setUser, go) {
+  if (!fireUser) return;
+  var isAdminEmail = fireUser.email && fireUser.email === "admin@servora.in";
+  sbGet("users", "?uid=eq." + fireUser.uid).then(function(users) {
+    var existing = users && users.length > 0 ? users[0] : null;
+    var role = isAdminEmail ? "admin" : (existing ? existing.role : "user");
+    var u = {
+      uid: fireUser.uid,
+      name: fireUser.displayName || "",
+      email: fireUser.email || "",
+      photo: fireUser.photoURL || "",
+      phone: existing ? existing.phone || "" : "",
+      role: role,
+      id: existing ? existing.id : ""
+    };
+    if (!existing) {
+      sbPost("users", {uid: fireUser.uid, name: fireUser.displayName || "", email: fireUser.email || "", photo: fireUser.photoURL || "", phone: "", role: role});
+    }
+    setUser(u);
+    if (role === "admin") go("admin");
+    else if (role === "business") go("bizDash");
+    else go("dash");
+  }).catch(function() {
+    var u = {uid: fireUser.uid, name: fireUser.displayName || "", email: fireUser.email || "", photo: fireUser.photoURL || "", role: "user"};
+    setUser(u); go("dash");
+  });
+}
+
+/* =====================
    FIREBASE HELPERS
    Drop-in replacements for sbGet/sbPost/sbPatch
    Falls back to empty arrays if Firebase not loaded
@@ -779,7 +810,26 @@ function SignupFlow(props){
   function onEK(i,e){if(e.key==="Backspace"&&!eOtp[i]&&i>0&&eRefs.current[i-1])eRefs.current[i-1].focus();}
   function onPO(i,v){if(!/^\d*$/.test(v))return;var n=pOtp.slice();n[i]=v.slice(-1);setPOtp(n);if(v&&i<5&&pRefs.current[i+1])pRefs.current[i+1].focus();}
   function onPK(i,e){if(e.key==="Backspace"&&!pOtp[i]&&i>0&&pRefs.current[i-1])pRefs.current[i-1].focus();}
-  var heads=["Create Account","Verify Email","Verify Phone"];
+  function doGoogleSignup() {
+    if (!auth || !FIREBASE_OK) { setAl({type:"err", msg:"Login service not available."}); return; }
+    setLoading(true); setAl(null);
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt: "select_account"});
+    auth.signInWithPopup(provider).then(function(result) {
+      setLoading(false);
+      handleGoogleUser(result.user, props.setUser, props.go);
+    }).catch(function(err) {
+      setLoading(false);
+      var code = err && err.code || "";
+      if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
+        var provider2 = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithRedirect(provider2);
+      } else {
+        setAl({type:"err", msg:"Google signup failed. Please try again."});
+      }
+    });
+  }
+  var heads=["Create Account","Verify Phone","Verify Phone"];
   return React.createElement("div",null,
     React.createElement("h2",{style:{fontSize:26,fontWeight:800,fontFamily:"Poppins",marginBottom:6}},heads[step-1]),
     React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.6,marginBottom:24}},step===1?"Join Servora to find trusted services in Pune":step===2?"Enter the 6-digit code sent to "+em:"Enter the 6-digit SMS code sent to +91 "+ph),
@@ -794,7 +844,16 @@ function SignupFlow(props){
       React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Mobile Number"),React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden"}},React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});},placeholder:"10-digit number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px"}})),errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph)),
       React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Password"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDD12"),React.createElement("input",{value:pw,onChange:function(e){setPw(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.pw;return o;});},className:"field hi"+(errs.pw?" err":""),placeholder:"Min 8 characters",type:"password"})),pw&&React.createElement("div",null,React.createElement("div",{className:"pwbar"},[1,2,3,4].map(function(i){return React.createElement("div",{key:i,className:"pwseg",style:{background:psc>=i?pwC[psc]:"var(--s3)"}})})),React.createElement("div",{style:{fontSize:11,color:pwC[psc],marginTop:3,fontWeight:600}},pwL[psc])),errs.pw&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.pw)),
       React.createElement("div",{style:{marginBottom:20}},React.createElement("label",{className:"lbl"},"Confirm Password"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDD12"),React.createElement("input",{value:co,onChange:function(e){setCo(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.co;return o;});},className:"field hi"+(errs.co?" err":""),placeholder:"Repeat password",type:"password"})),co&&co===pw&&React.createElement("div",{className:"om"},"\u2705 Passwords match"),errs.co&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.co)),
-      React.createElement("button",{onClick:doS1,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Checking..."):"Continue \u2192"),
+      React.createElement("button",{onClick:doS1,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:12}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Checking..."):"Continue \u2192"),
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
+        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}}),
+        React.createElement("span",{style:{color:"var(--t3)",fontSize:12,fontWeight:600}},"OR"),
+        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}})
+      ),
+      React.createElement("button",{onClick:doGoogleSignup,disabled:loading,className:"btn",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15,fontWeight:600,background:"#fff",color:"#1f2937",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:16}},
+        React.createElement("img",{src:"https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",style:{width:20,height:20}}),
+        "Sign up with Google"
+      ),
       React.createElement("div",{style:{textAlign:"center"}},React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"Already have an account? "),React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Log In"))
     ),
     step===2&&React.createElement("div",null,
@@ -897,6 +956,24 @@ function LoginFlow(props){
       setAl({type:"err",msg:msg});
     });
   }
+  function doGoogleLogin() {
+    if (!auth || !FIREBASE_OK) { setAl({type:"err", msg:"Login service not available. Please try again."}); return; }
+    setLoading(true); setAl(null);
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt: "select_account"});
+    auth.signInWithPopup(provider).then(function(result) {
+      setLoading(false);
+      handleGoogleUser(result.user, props.setUser, props.go);
+    }).catch(function(err) {
+      setLoading(false);
+      var code = err && err.code || "";
+      if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
+        auth.signInWithRedirect(provider);
+      } else {
+        setAl({type:"err", msg:"Google login failed. Please try again."});
+      }
+    });
+  }
   function onO(i,v){if(!/^\d*$/.test(v))return;var n=otp.slice();n[i]=v.slice(-1);setOtp(n);if(v&&i<5&&refs.current[i+1])refs.current[i+1].focus();}
   function onK(i,e){if(e.key==="Backspace"&&!otp[i]&&i>0&&refs.current[i-1])refs.current[i-1].focus();}
   return React.createElement("div",null,
@@ -905,7 +982,16 @@ function LoginFlow(props){
     al&&React.createElement(AB,{type:al.type},al.msg),
     step===1&&React.createElement("div",null,
       React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Mobile Number"),React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden"}},React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});},placeholder:"10-digit number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px"}})),errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph)),
-      React.createElement("button",{onClick:doLogin,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Please wait..."):"Send OTP \u2192"),
+      React.createElement("button",{onClick:doLogin,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:12}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Please wait..."):"Send OTP \u2192"),
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
+        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}}),
+        React.createElement("span",{style:{color:"var(--t3)",fontSize:12,fontWeight:600}},"OR"),
+        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}})
+      ),
+      React.createElement("button",{onClick:doGoogleLogin,disabled:loading,className:"btn",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15,fontWeight:600,background:"#fff",color:"#1f2937",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:16}},
+        React.createElement("img",{src:"https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",style:{width:20,height:20}}),
+        "Continue with Google"
+      ),
       React.createElement("div",{style:{textAlign:"center"}},React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"New to Servora? "),React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Create Account"))
     ),
     step===2&&React.createElement("div",null,
@@ -1766,6 +1852,14 @@ function App(){
     if(p==="account"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business")setPage("bizDash");else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
     setPage(p);window.scrollTo({top:0,behavior:"smooth"});
   }
+  useEffect(function(){
+    if (!auth || !FIREBASE_OK) return;
+    auth.getRedirectResult().then(function(result) {
+      if (result && result.user) {
+        handleGoogleUser(result.user, setUser, go);
+      }
+    }).catch(function(err) { console.warn("Redirect result:", err); });
+  }, []);
   function renderPage(){
     if(page==="home")        return React.createElement(HomePage,       {go:go,setBiz:setSelBiz});
     if(page==="listings")    return React.createElement(ListingsPage,   {go:go,setBiz:setSelBiz});
