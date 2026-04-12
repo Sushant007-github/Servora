@@ -738,7 +738,7 @@ function SignupFlow(props){
       if(r&&r.length>0){setErrs({ph:"This number is already registered. Please login."});setLoading(false);return;}
       // Send OTP via Firebase Phone Auth
       if(!window._rcpvS){
-        window._rcpvS=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"invisible"});
+        window._rcpvS=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"invisible",callback:function(){},expired_callback:function(){try{window._rcpvS.clear();}catch(e3){} window._rcpvS=null;}});
       }
       auth.signInWithPhoneNumber("+91"+ph, window._rcpvS).then(function(result){
         window._signupConfirm=result;
@@ -747,7 +747,9 @@ function SignupFlow(props){
       }).catch(function(err){
         setLoading(false);
         if(window._rcpvS){try{window._rcpvS.clear();}catch(e2){} window._rcpvS=null;}
-        setAl({type:"err",msg:"Failed to send OTP. Try again."});
+        var code=err&&err.code||"";
+        var msg=code==="auth/too-many-requests"?"Too many attempts. Wait a few minutes and retry.":code==="auth/invalid-phone-number"?"Invalid phone number.":"Failed to send OTP. Please try again.";
+        setAl({type:"err",msg:msg});
       });
     }).catch(function(){setLoading(false);setAl({type:"err",msg:"Something went wrong. Try again."});});
   }
@@ -816,48 +818,65 @@ function LoginFlow(props){
   var [otp,setOtp]=useState(["","","","","",""]); var [timer,setTimer]=useState(0);
   var refs=useRef([]); var confirmRef=useRef(null);
   useEffect(function(){if(timer<=0)return;var t=setTimeout(function(){setTimer(function(x){return x-1;});},1000);return function(){clearTimeout(t);};},[timer]);
+  function destroyRecaptcha(){
+    if(window._rcpv){try{window._rcpv.clear();}catch(e2){} window._rcpv=null;}
+  }
   function setupRecaptcha(){
-    if(!window._rcpv){
-      window._rcpv=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"invisible"});
-    }
+    destroyRecaptcha();
+    window._rcpv=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"invisible",callback:function(){},expired_callback:function(){destroyRecaptcha();}});
     return window._rcpv;
+  }
+  function sendOtpToPhone(phoneNum, onSuccess, onFail){
+    if(!auth||!FIREBASE_OK){onFail({code:"auth/unavailable"});return;}
+    auth.useDeviceLanguage();
+    var verifier=setupRecaptcha();
+    auth.signInWithPhoneNumber("+91"+phoneNum, verifier).then(onSuccess).catch(function(err){
+      destroyRecaptcha();
+      onFail(err);
+    });
+  }
+  function getOtpErrorMsg(err){
+    var code=err&&err.code||"";
+    if(code==="auth/invalid-phone-number")return "Invalid phone number. Enter 10-digit mobile number.";
+    if(code==="auth/too-many-requests")return "Too many attempts. Please try again after a few minutes.";
+    if(code==="auth/quota-exceeded")return "SMS quota exceeded. Please try again later.";
+    if(code==="auth/captcha-check-failed")return "Security check failed. Please refresh and try again.";
+    if(code==="auth/network-request-failed")return "No internet connection. Check your network and retry.";
+    if(code==="auth/unavailable")return "Login service temporarily unavailable.";
+    return "Failed to send OTP. Please try again.";
   }
   function doLogin(){
     var e={};
     if(!vP(ph))e.ph="Enter a valid 10-digit number";
     setErrs(e);if(Object.keys(e).length>0)return;
     setLoading(true);setAl(null);
-    // Demo mode if Firebase not connected
-    if(!auth||!FIREBASE_OK){
-      var isAdmin=ADMIN_PHONES.indexOf(ph)>=0;
-      setTimeout(function(){
-        setLoading(false);setStep(2);setTimer(60);
-        setAl({type:"info",msg:"[Demo] OTP sent to +91 "+ph+" (use any 6 digits)"});
-      },700);
-      return;
-    }
-    var verifier=setupRecaptcha();
-    auth.signInWithPhoneNumber("+91"+ph, verifier).then(function(result){
+    sendOtpToPhone(ph, function(result){
       confirmRef.current=result;
       setLoading(false);setStep(2);setTimer(60);
       setAl({type:"info",msg:"OTP sent to +91 "+ph});
-    }).catch(function(err){
+    }, function(err){
       setLoading(false);
-      if(window._rcpv){try{window._rcpv.clear();}catch(e2){} window._rcpv=null;}
-      setAl({type:"err",msg:"Failed to send OTP. Check number and try again."});
-      console.error(err);
+      setAl({type:"err",msg:getOtpErrorMsg(err)});
+      console.error("OTP send error:",err);
+    });
+  }
+  function doResend(){
+    setAl(null);setLoading(true);setOtp(["","","","","",""]);
+    sendOtpToPhone(ph, function(result){
+      confirmRef.current=result;
+      setLoading(false);setTimer(60);
+      setAl({type:"ok",msg:"New OTP sent to +91 "+ph});
+    }, function(err){
+      setLoading(false);
+      setAl({type:"err",msg:getOtpErrorMsg(err)});
     });
   }
   function doVerify(){
     if(otp.join("").length!==6)return;
     setLoading(true);
-    // Demo mode fallback
     if(!auth||!FIREBASE_OK||!confirmRef.current){
-      var isAdmin2=ADMIN_PHONES.indexOf(ph)>=0;
-      var demoRole=isAdmin2?"admin":"user";
-      var demoU={phone:ph,role:demoRole,name:"",uid:"demo"};
-      props.setUser(demoU);setLoading(false);
-      if(demoRole==="admin")props.go("admin");else props.go("dash");
+      setLoading(false);
+      setAl({type:"err",msg:"Session expired. Please go back and request a new OTP."});
       return;
     }
     confirmRef.current.confirm(otp.join("")).then(function(result){
@@ -870,10 +889,12 @@ function LoginFlow(props){
         if(!users||users.length===0){sbPost("users",{uid:fireUser.uid,phone:ph,role:role,name:""});}
         props.setUser(u);setLoading(false);
         if(role==="admin")props.go("admin");else if(role==="business")props.go("bizDash");else props.go("dash");
-      });
-    }).catch(function(){
+      }).catch(function(){setLoading(false);setAl({type:"err",msg:"Login error. Please try again."});});
+    }).catch(function(err){
       setLoading(false);
-      setAl({type:"err",msg:"Wrong OTP. Please try again."});
+      var code=err&&err.code||"";
+      var msg=code==="auth/invalid-verification-code"?"Wrong OTP. Please check and try again.":code==="auth/code-expired"?"OTP expired. Please request a new one.":"Verification failed. Please try again.";
+      setAl({type:"err",msg:msg});
     });
   }
   function onO(i,v){if(!/^\d*$/.test(v))return;var n=otp.slice();n[i]=v.slice(-1);setOtp(n);if(v&&i<5&&refs.current[i+1])refs.current[i+1].focus();}
@@ -884,7 +905,6 @@ function LoginFlow(props){
     al&&React.createElement(AB,{type:al.type},al.msg),
     step===1&&React.createElement("div",null,
       React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Mobile Number"),React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden"}},React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});},placeholder:"10-digit number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px"}})),errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph)),
-      React.createElement("div",{style:{background:"rgba(34,211,238,.05)",border:"1px solid rgba(34,211,238,.15)",borderRadius:12,padding:"12px 14px",marginBottom:16,fontSize:13,color:"var(--c)"}},"No password needed 00B7 Real SMS OTP via Firebase"),
       React.createElement("button",{onClick:doLogin,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Please wait..."):"Send OTP \u2192"),
       React.createElement("div",{style:{textAlign:"center"}},React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"New to Servora? "),React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Create Account"))
     ),
@@ -894,7 +914,7 @@ function LoginFlow(props){
       React.createElement("button",{onClick:doVerify,disabled:otp.join("").length!==6||loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:otp.join("").length!==6?0.5:1}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Signing in..."):"Verify and Sign In \u2713"),
       React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:13,color:"var(--t3)"}},
         React.createElement("button",{onClick:function(){setStep(1);},style:{background:"none",border:"none",color:"var(--t3)",cursor:"pointer",fontSize:13}},"\u2190 Change number"),
-        timer>0?React.createElement("span",null,"Resend in "+timer+"s"):React.createElement("button",{onClick:function(){setTimer(60);},style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend OTP")
+        timer>0?React.createElement("span",null,"Resend in "+timer+"s"):React.createElement("button",{onClick:doResend,disabled:loading,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend OTP")
       )
     )
   );
@@ -1677,7 +1697,7 @@ function AdminPanel(){
       ),
       tab==="leads"&&React.createElement("div",null,
         React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}},
-          [["Total",leads.length||24,"#22d3ee"],["New",leads.filter(function(l){return l.status==="new";}).length||14,"#818cf8"],["Done",Math.max(0,(leads.length||24)-(leads.filter(function(l){return l.status==="new";}).length||14)),"#34d399"]].map(function(x){
+          [["Total",leads.length,"#22d3ee"],["New",leads.filter(function(l){return l.status==="new";}).length,"#818cf8"],["Done",Math.max(0,leads.length-leads.filter(function(l){return l.status==="new";}).length),"#34d399"]].map(function(x){
             return React.createElement("div",{key:x[0],style:{padding:"14px 8px",background:x[2]+"08",border:"1px solid "+x[2]+"25",borderRadius:14,textAlign:"center"}},
               React.createElement("div",{style:{fontWeight:800,fontSize:22,color:x[2]}},x[1]),
               React.createElement("div",{style:{fontSize:11,color:"var(--t3)"}},x[0])
@@ -1693,7 +1713,7 @@ function AdminPanel(){
       ),
       tab==="ai-mod"&&React.createElement("div",null,
         React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}},
-          [["🚨","Flagged","2","var(--rose)"],["✅","Clean",leads.length||22,"var(--green)"],["🔍","Pending",pending.length,"var(--amber)"]].map(function(x){
+          [["🚨","Flagged",0,"var(--rose)"],["✅","Clean",leads.length,"var(--green)"],["🔍","Pending",pending.length,"var(--amber)"]].map(function(x){
             return React.createElement("div",{key:x[1],style:{padding:"14px 8px",background:x[3]+"08",border:"1px solid "+x[3]+"25",borderRadius:14,textAlign:"center"}},
               React.createElement("div",{style:{fontSize:18}},x[0]),
               React.createElement("div",{style:{fontWeight:800,fontSize:20,color:x[3]}},x[2]),
@@ -1710,17 +1730,10 @@ function AdminPanel(){
         ),
         React.createElement("div",{className:"card",style:{padding:18,borderRadius:16}},
           React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"🚫 Flagged Content"),
-          [["Fake Review","5-star paid review detected","CleanMate Pro","2 hr ago"],["Spam Leads","12 fake leads same IP","FixIt Tech","Yesterday"]].map(function(x){
-            return React.createElement("div",{key:x[0],style:{display:"flex",gap:10,padding:"12px 0",borderBottom:"1px solid var(--b1)"}},
-              React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"rgba(251,113,133,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}},"🚨"),
-              React.createElement("div",{style:{flex:1}},
-                React.createElement("div",{style:{fontWeight:600,fontSize:13}},x[0]),
-                React.createElement("div",{style:{color:"var(--t2)",fontSize:12}},x[1]),
-                React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},x[2]+" · "+x[3])
-              ),
-              React.createElement("button",{className:"btn bd",style:{padding:"6px 10px",borderRadius:8,fontSize:11}},"Remove")
-            );
-          })
+          React.createElement("div",{style:{padding:20,textAlign:"center",color:"var(--t3)"}},
+            React.createElement("div",{style:{fontSize:32,marginBottom:8}},"✅"),
+            React.createElement("div",{style:{fontSize:13}},"No flagged content right now")
+          )
         )
       ),
       tab==="announce"&&React.createElement("div",null,
@@ -1733,15 +1746,7 @@ function AdminPanel(){
         ),
         React.createElement("div",{className:"card",style:{padding:20,borderRadius:16}},
           React.createElement("h4",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"Recent Announcements"),
-          [["🌸 Big Spring Sale","Up to 50% off on paid plans","2 days ago"],["🆕 AI Coach Live","AI Business Coach now available","1 week ago"],["⚠️ Maintenance","Scheduled 2am-4am Sunday","2 weeks ago"]].map(function(x){
-            return React.createElement("div",{key:x[0],className:"ann-banner",style:{marginBottom:10}},
-              React.createElement("div",{style:{flex:1}},
-                React.createElement("div",{style:{fontWeight:700,fontSize:13}},x[0]),
-                React.createElement("div",{style:{color:"var(--t2)",fontSize:12,marginTop:2}},x[1]),
-                React.createElement("div",{style:{color:"var(--t3)",fontSize:11,marginTop:4}},x[2])
-              )
-            );
-          })
+          React.createElement("div",{style:{padding:16,textAlign:"center",color:"var(--t3)",fontSize:13}},"Announcements you send will appear here.")
         )
       )
     )
