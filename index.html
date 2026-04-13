@@ -33,10 +33,11 @@ try {
     }
     window._db = firebase.firestore();
     window._auth = firebase.auth();
+    window._auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
     window.FIREBASE_OK = true;
-    console.log("Firebase ready!");
+    console.log("Firebase ready! Persistence: LOCAL");
   } else {
-    console.warn("Firebase SDK not available - open on Vercel for live mode");
+    console.warn("Firebase SDK not available");
   }
 } catch(e) {
   console.warn("Firebase init failed:", e.message);
@@ -745,276 +746,259 @@ function AuthPage(props){
 }
 
 function SignupFlow(props){
-  var [step,setStep]=useState(1); var [role,setRole]=useState("user");
-  var [nm,setNm]=useState(""); var [em,setEm]=useState(""); var [ph,setPh]=useState(""); var [pw,setPw]=useState(""); var [co,setCo]=useState("");
+  var [nm,setNm]=useState(""); var [em,setEm]=useState(""); var [pw,setPw]=useState(""); var [co,setCo]=useState("");
+  var [role,setRole]=useState("user");
   var [errs,setErrs]=useState({}); var [loading,setLoading]=useState(false); var [al,setAl]=useState(null);
-  var [eOtp,setEOtp]=useState(["","","","","",""]); var [pOtp,setPOtp]=useState(["","","","","",""]);
-  var [timer,setTimer]=useState(0);
-  var eRefs=useRef([]); var pRefs=useRef([]);
-  useEffect(function(){if(timer<=0)return;var t=setTimeout(function(){setTimer(function(x){return x-1;});},1000);return function(){clearTimeout(t);};},[timer]);
+  var [done,setDone]=useState(false);
   var psc=pwSc(pw);
   var pwC=["#334155","#fb7185","#fbbf24","#22d3ee","#34d399"];
   var pwL=["","Weak","Fair","Good","Strong"];
-  function doS1(){
+  function doSignup(){
     var e={};
     if(!vN(nm))e.nm="Name must be at least 2 characters";
     if(!vE(em))e.em="Enter a valid email address";
-    if(!vP(ph))e.ph="Enter a valid 10-digit number";
     if(!vPW(pw))e.pw="Password must be at least 8 characters";
     if(pw!==co)e.co="Passwords do not match";
     setErrs(e);if(Object.keys(e).length>0)return;
-    setLoading(true);setAl(null);
-    // Check if phone already exists in Firestore
-    sbGet("users","?phone=eq."+ph).then(function(r){
-      if(r&&r.length>0){setErrs({ph:"This number is already registered. Please login."});setLoading(false);return;}
-      // Send OTP via Firebase Phone Auth
-      if(typeof firebase==="undefined"||!auth||!FIREBASE_OK){
-        setLoading(false);
-        setAl({type:"err",msg:"Firebase not available. Please open on Vercel (servora-eta.vercel.app) for real OTP."});
-        return;
-      }
-      if(!window._rcpvS){
-        window._rcpvS=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"invisible",callback:function(){},expired_callback:function(){try{window._rcpvS.clear();}catch(e3){} window._rcpvS=null;}});
-      }
-      auth.signInWithPhoneNumber("+91"+ph, window._rcpvS).then(function(result){
-        window._signupConfirm=result;
-        setLoading(false);setStep(2);setTimer(60);
-        setAl({type:"info",msg:"OTP sent to +91 "+ph});
-      }).catch(function(err){
-        setLoading(false);
-        if(window._rcpvS){try{window._rcpvS.clear();}catch(e2){} window._rcpvS=null;}
-        var code=err&&err.code||"";
-        var msg=code==="auth/too-many-requests"?"Too many attempts. Wait a few minutes and retry.":code==="auth/invalid-phone-number"?"Invalid phone number.":"Failed to send OTP. Please try again.";
-        setAl({type:"err",msg:msg});
-      });
-    }).catch(function(){setLoading(false);setAl({type:"err",msg:"Something went wrong. Try again."});});
-  }
-  function doVE(){
-    // Skip email OTP - go straight to phone OTP (step 2 IS phone OTP now)
-    if(eOtp.join("").length!==6)return;
-    setLoading(true);
-    window._signupConfirm.confirm(eOtp.join("")).then(function(result){
-      var fireUser=result.user;
-      var isAdmin=ADMIN_PHONES.indexOf(ph)>=0;
-      var userRole=isAdmin?"admin":role;
-      sbPost("users",{uid:fireUser.uid,name:nm.trim(),email:em.toLowerCase().trim(),phone:ph,role:userRole,verified:true}).then(function(d){
-        var u={uid:fireUser.uid,name:nm,email:em,phone:ph,role:userRole,id:d&&d[0]?d[0].id:""};
-        props.setUser(u);setLoading(false);
-        if(isAdmin)props.go("admin");else if(userRole==="business")props.go("bizDash");else props.go("dash");
-      });
-    }).catch(function(){
-      setLoading(false);
-      setAl({type:"err",msg:"Wrong OTP. Please try again."});
-    });
-  }
-  function doVP(){
-    // Legacy - redirects to doVE
-    doVE();
-  }
-  function onEO(i,v){if(!/^\d*$/.test(v))return;var n=eOtp.slice();n[i]=v.slice(-1);setEOtp(n);if(v&&i<5&&eRefs.current[i+1])eRefs.current[i+1].focus();}
-  function onEK(i,e){if(e.key==="Backspace"&&!eOtp[i]&&i>0&&eRefs.current[i-1])eRefs.current[i-1].focus();}
-  function onPO(i,v){if(!/^\d*$/.test(v))return;var n=pOtp.slice();n[i]=v.slice(-1);setPOtp(n);if(v&&i<5&&pRefs.current[i+1])pRefs.current[i+1].focus();}
-  function onPK(i,e){if(e.key==="Backspace"&&!pOtp[i]&&i>0&&pRefs.current[i-1])pRefs.current[i-1].focus();}
-  function doGoogleSignup() {
-    if (!auth || !FIREBASE_OK || typeof firebase==="undefined") { setAl({type:"err", msg:"Login service not available. Please open on Vercel."}); return; }
-    setLoading(true); setAl(null);
-    var provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({prompt: "select_account"});
-    auth.signInWithPopup(provider).then(function(result) {
-      setLoading(false);
-      handleGoogleUser(result.user, props.setUser, props.go);
-    }).catch(function(err) {
-      setLoading(false);
-      var code = err && err.code || "";
-      if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
-        var provider2 = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider2);
-      } else {
-        setAl({type:"err", msg:"Google signup failed. Please try again."});
-      }
-    });
-  }
-  var heads=["Create Account","Verify Phone","Verify Phone"];
-  return React.createElement("div",null,
-    React.createElement("h2",{style:{fontSize:26,fontWeight:800,fontFamily:"Poppins",marginBottom:6}},heads[step-1]),
-    React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.6,marginBottom:24}},step===1?"Join Servora to find trusted services in Pune":step===2?"Enter the 6-digit code sent to "+em:"Enter the 6-digit SMS code sent to +91 "+ph),
-    al&&React.createElement(AB,{type:al.type},al.msg),
-    step===1&&React.createElement("div",null,
-      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}},
-        React.createElement("button",{onClick:function(){setRole("user");},className:"btn",style:{padding:"13px 0",borderRadius:12,background:role==="user"?"rgba(34,211,238,.1)":"var(--s1)",border:role==="user"?"1.5px solid rgba(34,211,238,.4)":"1px solid var(--b2)",color:role==="user"?"var(--c)":"var(--t2)",fontWeight:role==="user"?700:400,fontSize:14}},"\uD83D\uDC64 Customer"),
-        React.createElement("button",{onClick:function(){setRole("business");},className:"btn",style:{padding:"13px 0",borderRadius:12,background:role==="business"?"rgba(34,211,238,.1)":"var(--s1)",border:role==="business"?"1.5px solid rgba(34,211,238,.4)":"1px solid var(--b2)",color:role==="business"?"var(--c)":"var(--t2)",fontWeight:role==="business"?700:400,fontSize:14}},"\uD83C\uDFEA Business")
-      ),
-      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Full Name"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDC64"),React.createElement("input",{value:nm,onChange:function(e){setNm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.nm;return o;});},className:"field hi"+(errs.nm?" err":""),placeholder:"Your full name"})),errs.nm&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.nm)),
-      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Email Address"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\u2709\uFE0F"),React.createElement("input",{value:em,onChange:function(e){setEm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.em;return o;});},className:"field hi"+(errs.em?" err":""),placeholder:"you@email.com",type:"email"})),errs.em&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.em)),
-      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Mobile Number"),React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden"}},React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});},placeholder:"10-digit number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px"}})),errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph)),
-      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Password"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDD12"),React.createElement("input",{value:pw,onChange:function(e){setPw(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.pw;return o;});},className:"field hi"+(errs.pw?" err":""),placeholder:"Min 8 characters",type:"password"})),pw&&React.createElement("div",null,React.createElement("div",{className:"pwbar"},[1,2,3,4].map(function(i){return React.createElement("div",{key:i,className:"pwseg",style:{background:psc>=i?pwC[psc]:"var(--s3)"}})})),React.createElement("div",{style:{fontSize:11,color:pwC[psc],marginTop:3,fontWeight:600}},pwL[psc])),errs.pw&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.pw)),
-      React.createElement("div",{style:{marginBottom:20}},React.createElement("label",{className:"lbl"},"Confirm Password"),React.createElement("div",{style:{position:"relative"}},React.createElement("span",{className:"fi"},"\uD83D\uDD12"),React.createElement("input",{value:co,onChange:function(e){setCo(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.co;return o;});},className:"field hi"+(errs.co?" err":""),placeholder:"Repeat password",type:"password"})),co&&co===pw&&React.createElement("div",{className:"om"},"\u2705 Passwords match"),errs.co&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.co)),
-      React.createElement("button",{onClick:doS1,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:12}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Checking..."):"Continue \u2192"),
-      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
-        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}}),
-        React.createElement("span",{style:{color:"var(--t3)",fontSize:12,fontWeight:600}},"OR"),
-        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}})
-      ),
-      React.createElement("button",{onClick:doGoogleSignup,disabled:loading,className:"btn",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15,fontWeight:600,background:"#fff",color:"#1f2937",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:16}},
-        React.createElement("img",{src:"https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",style:{width:20,height:20}}),
-        "Sign up with Google"
-      ),
-      React.createElement("div",{style:{textAlign:"center"}},React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"Already have an account? "),React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Log In"))
-    ),
-    step===2&&React.createElement("div",null,
-      React.createElement("div",{style:{padding:"16px 20px",background:"rgba(34,211,238,.04)",border:"1px solid rgba(34,211,238,.15)",borderRadius:14,marginBottom:24,fontSize:14,color:"var(--t2)"}},"\uD83D\uDCE7 Code sent to ",React.createElement("strong",{style:{color:"var(--t1)"}},em)),
-      React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center",marginBottom:24}},eOtp.map(function(d,i){return React.createElement("input",{key:i,ref:function(el){eRefs.current[i]=el;},value:d,onChange:function(e){onEO(i,e.target.value);},onKeyDown:function(e){onEK(i,e);},className:"ob"+(d?" fl":""),maxLength:1,type:"tel"});})),
-      React.createElement("button",{onClick:doVE,disabled:eOtp.join("").length!==6||loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:eOtp.join("").length!==6?0.5:1}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Verifying..."):"Verify Email \u2713"),
-      React.createElement("div",{style:{textAlign:"center",fontSize:13,color:"var(--t3)"}},timer>0?"Resend in "+timer+"s":React.createElement("button",{onClick:function(){setTimer(60);},style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend Code"))
-    ),
-    step===3&&React.createElement("div",null,
-      React.createElement("div",{style:{padding:"16px 20px",background:"rgba(52,211,153,.04)",border:"1px solid rgba(52,211,153,.15)",borderRadius:14,marginBottom:24,fontSize:14,color:"var(--t2)"}},"\uD83D\uDCF1 SMS sent to ",React.createElement("strong",{style:{color:"var(--t1)"}},"+91 "+ph)),
-      React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center",marginBottom:24}},pOtp.map(function(d,i){return React.createElement("input",{key:i,ref:function(el){pRefs.current[i]=el;},value:d,onChange:function(e){onPO(i,e.target.value);},onKeyDown:function(e){onPK(i,e);},className:"ob"+(d?" fl":""),maxLength:1,type:"tel"});})),
-      React.createElement("button",{onClick:doVP,disabled:pOtp.join("").length!==6||loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:pOtp.join("").length!==6?0.5:1}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Creating Account...") :"Create Account \uD83C\uDF89"),
-      React.createElement("div",{style:{textAlign:"center",fontSize:13,color:"var(--t3)"}},timer>0?"Resend in "+timer+"s":React.createElement("button",{onClick:function(){setTimer(60);},style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend SMS"))
-    )
-  );
-}
-
-function LoginFlow(props){
-  var [step,setStep]=useState(1); var [ph,setPh]=useState("");
-  var [errs,setErrs]=useState({}); var [loading,setLoading]=useState(false); var [al,setAl]=useState(null);
-  var [otp,setOtp]=useState(["","","","","",""]); var [timer,setTimer]=useState(0);
-  var refs=useRef([]); var confirmRef=useRef(null);
-  useEffect(function(){if(timer<=0)return;var t=setTimeout(function(){setTimer(function(x){return x-1;});},1000);return function(){clearTimeout(t);};},[timer]);
-  function destroyRecaptcha(){
-    if(window._rcpv){try{window._rcpv.clear();}catch(e2){} window._rcpv=null;}
-  }
-  function setupRecaptcha(){
-    destroyRecaptcha();
-    if(typeof firebase==="undefined"||!firebase.auth){return null;}
-    window._rcpv=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"invisible",callback:function(){},expired_callback:function(){destroyRecaptcha();}});
-    return window._rcpv;
-  }
-  function sendOtpToPhone(phoneNum, onSuccess, onFail){
-    if(!auth||!FIREBASE_OK||typeof firebase==="undefined"){onFail({code:"auth/unavailable"});return;}
-    auth.useDeviceLanguage();
-    var verifier=setupRecaptcha();
-    auth.signInWithPhoneNumber("+91"+phoneNum, verifier).then(onSuccess).catch(function(err){
-      destroyRecaptcha();
-      onFail(err);
-    });
-  }
-  function getOtpErrorMsg(err){
-    var code=err&&err.code||"";
-    if(code==="auth/invalid-phone-number")return "Invalid phone number. Enter 10-digit mobile number.";
-    if(code==="auth/too-many-requests")return "Too many attempts. Please try again after a few minutes.";
-    if(code==="auth/quota-exceeded")return "SMS quota exceeded. Please try again later.";
-    if(code==="auth/captcha-check-failed")return "Security check failed. Please refresh and try again.";
-    if(code==="auth/network-request-failed")return "No internet connection. Check your network and retry.";
-    if(code==="auth/unavailable")return "Login service temporarily unavailable.";
-    return "Failed to send OTP. Please try again.";
-  }
-  function doLogin(){
-    var e={};
-    if(!vP(ph))e.ph="Enter a valid 10-digit number";
-    setErrs(e);if(Object.keys(e).length>0)return;
-    setLoading(true);setAl(null);
-    sendOtpToPhone(ph, function(result){
-      confirmRef.current=result;
-      setLoading(false);setStep(2);setTimer(60);
-      setAl({type:"info",msg:"OTP sent to +91 "+ph});
-    }, function(err){
-      setLoading(false);
-      setAl({type:"err",msg:getOtpErrorMsg(err)});
-      console.error("OTP send error:",err);
-    });
-  }
-  function doResend(){
-    setAl(null);setLoading(true);setOtp(["","","","","",""]);
-    sendOtpToPhone(ph, function(result){
-      confirmRef.current=result;
-      setLoading(false);setTimer(60);
-      setAl({type:"ok",msg:"New OTP sent to +91 "+ph});
-    }, function(err){
-      setLoading(false);
-      setAl({type:"err",msg:getOtpErrorMsg(err)});
-    });
-  }
-  function doVerify(){
-    if(otp.join("").length!==6)return;
-    setLoading(true);
-    if(typeof firebase==="undefined"||!auth||!FIREBASE_OK||!confirmRef.current){
-      setLoading(false);
-      setAl({type:"err",msg:!FIREBASE_OK?"Firebase not connected. Open on Vercel for full functionality.":"Session expired. Please go back and request a new OTP."});
-      return;
+    if(!auth||!FIREBASE_OK||typeof firebase==="undefined"){
+      setAl({type:"err",msg:"Firebase not available. Please open on Vercel."});return;
     }
-    confirmRef.current.confirm(otp.join("")).then(function(result){
-      var fireUser=result.user;
-      var isAdmin=ADMIN_PHONES.indexOf(ph)>=0;
-      sbGet("users","?phone=eq."+ph).then(function(users){
-        var role=isAdmin?"admin":(users&&users.length>0?users[0].role:"user");
-        var name=users&&users.length>0?users[0].name:"";
-        var u={uid:fireUser.uid,phone:ph,role:role,name:name,id:users&&users.length>0?users[0].id:""};
-        if(!users||users.length===0){sbPost("users",{uid:fireUser.uid,phone:ph,role:role,name:""});}
-        props.setUser(u);setLoading(false);
-        if(role==="admin")props.go("admin");else if(role==="business")props.go("bizDash");else props.go("dash");
-      }).catch(function(){setLoading(false);setAl({type:"err",msg:"Login error. Please try again."});});
+    setLoading(true);setAl(null);
+    auth.createUserWithEmailAndPassword(em.trim().toLowerCase(),pw).then(function(cred){
+      var fireUser=cred.user;
+      fireUser.sendEmailVerification().catch(function(){});
+      fireUser.updateProfile({displayName:nm.trim()}).catch(function(){});
+      var isAdminEmail=em.trim().toLowerCase()==="admin@servora.in";
+      var userRole=isAdminEmail?"admin":role;
+      sbPost("users",{uid:fireUser.uid,name:nm.trim(),email:em.trim().toLowerCase(),phone:"",role:userRole,emailVerified:false});
+      auth.signOut();
+      setLoading(false);
+      setDone(true);
     }).catch(function(err){
       setLoading(false);
       var code=err&&err.code||"";
-      var msg=code==="auth/invalid-verification-code"?"Wrong OTP. Please check and try again.":code==="auth/code-expired"?"OTP expired. Please request a new one.":"Verification failed. Please try again.";
+      var msg=code==="auth/email-already-in-use"?"This email is already registered. Please login.":
+               code==="auth/invalid-email"?"Enter a valid email address.":
+               code==="auth/weak-password"?"Password must be at least 6 characters.":
+               code==="auth/network-request-failed"?"No internet. Check your connection.":
+               "Signup failed. Please try again.";
       setAl({type:"err",msg:msg});
     });
   }
-  function doGoogleLogin() {
-    if (!auth || !FIREBASE_OK || typeof firebase==="undefined") { setAl({type:"err", msg:"Login service not available. Please open on Vercel."}); return; }
-    setLoading(true); setAl(null);
-    var provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({prompt: "select_account"});
-    auth.signInWithPopup(provider).then(function(result) {
+  function doGoogleSignup(){
+    if(!auth||!FIREBASE_OK||typeof firebase==="undefined"){setAl({type:"err",msg:"Login service not available. Please open on Vercel."});return;}
+    setLoading(true);setAl(null);
+    var provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:"select_account"});
+    auth.signInWithPopup(provider).then(function(result){
       setLoading(false);
-      handleGoogleUser(result.user, props.setUser, props.go);
-    }).catch(function(err) {
+      handleGoogleUser(result.user,props.setUser,props.go);
+    }).catch(function(err){
       setLoading(false);
-      var code = err && err.code || "";
-      if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
-        auth.signInWithRedirect(provider);
+      var code=err&&err.code||"";
+      if(code==="auth/popup-blocked"||code==="auth/popup-closed-by-user"){
+        auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
       } else {
-        setAl({type:"err", msg:"Google login failed. Please try again."});
+        setAl({type:"err",msg:"Google signup failed. Please try again."});
       }
     });
   }
-  function onO(i,v){if(!/^\d*$/.test(v))return;var n=otp.slice();n[i]=v.slice(-1);setOtp(n);if(v&&i<5&&refs.current[i+1])refs.current[i+1].focus();}
-  function onK(i,e){if(e.key==="Backspace"&&!otp[i]&&i>0&&refs.current[i-1])refs.current[i-1].focus();}
+  if(done){
+    return React.createElement("div",{style:{textAlign:"center",padding:"20px 0"}},
+      React.createElement("div",{style:{fontSize:56,marginBottom:16}},"📧"),
+      React.createElement("h3",{style:{fontWeight:800,fontSize:20,fontFamily:"Poppins",marginBottom:8}},"Check Your Email!"),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.75,marginBottom:20}},
+        "We sent a verification link to ",React.createElement("strong",{style:{color:"var(--t1)"}},em),". Click the link to verify, then log in."
+      ),
+      React.createElement("div",{className:"abox ainf",style:{marginBottom:20}},"⚠️ You must verify your email before logging in."),
+      React.createElement("button",{onClick:function(){props.sw();},className:"btn bp",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15,marginBottom:10}},"Go to Login"),
+      React.createElement("button",{onClick:function(){setDone(false);setEm("");setPw("");setCo("");setNm("");},className:"btn bo",style:{width:"100%",padding:"12px 0",borderRadius:14,fontSize:14}},"Try Different Email")
+    );
+  }
   return React.createElement("div",null,
-    React.createElement("h2",{style:{fontSize:26,fontWeight:800,fontFamily:"Poppins",marginBottom:6}},step===1?"Welcome Back \uD83D\uDC4B":"Verify Your Phone \uD83D\uDD10"),
-    React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.6,marginBottom:24}},step===1?"Sign in to your Servora account":"Enter the 6-digit code sent to +91 "+ph),
+    React.createElement("h2",{style:{fontSize:24,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Create Account"),
+    React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.6,marginBottom:20}},"Join 12,000+ users on Servora Pune"),
     al&&React.createElement(AB,{type:al.type},al.msg),
-    step===1&&React.createElement("div",null,
-      React.createElement("div",{style:{marginBottom:16}},React.createElement("label",{className:"lbl"},"Mobile Number"),React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden"}},React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});},placeholder:"10-digit number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px"}})),errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph)),
-      React.createElement("button",{onClick:doLogin,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:12}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Please wait..."):"Send OTP \u2192"),
-      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
-        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}}),
-        React.createElement("span",{style:{color:"var(--t3)",fontSize:12,fontWeight:600}},"OR"),
-        React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}})
-      ),
-      React.createElement("button",{onClick:doGoogleLogin,disabled:loading,className:"btn",style:{width:"100%",padding:"14px 0",borderRadius:14,fontSize:15,fontWeight:600,background:"#fff",color:"#1f2937",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:16}},
-        React.createElement("img",{src:"https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",style:{width:20,height:20}}),
-        "Continue with Google"
-      ),
-      React.createElement("div",{style:{textAlign:"center"}},React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"New to Servora? "),React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Create Account"))
+    React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}},
+      React.createElement("button",{onClick:function(){setRole("user");},className:"btn",style:{padding:"11px 0",borderRadius:12,background:role==="user"?"rgba(34,211,238,.1)":"var(--s1)",border:role==="user"?"1.5px solid rgba(34,211,238,.4)":"1px solid var(--b2)",color:role==="user"?"var(--c)":"var(--t2)",fontWeight:role==="user"?700:400,fontSize:13}},"Customer"),
+      React.createElement("button",{onClick:function(){setRole("business");},className:"btn",style:{padding:"11px 0",borderRadius:12,background:role==="business"?"rgba(34,211,238,.1)":"var(--s1)",border:role==="business"?"1.5px solid rgba(34,211,238,.4)":"1px solid var(--b2)",color:role==="business"?"var(--c)":"var(--t2)",fontWeight:role==="business"?700:400,fontSize:13}},"Business")
     ),
-    step===2&&React.createElement("div",null,
-      React.createElement("div",{style:{padding:"16px 20px",background:"rgba(34,211,238,.04)",border:"1px solid rgba(34,211,238,.15)",borderRadius:14,marginBottom:24,fontSize:14,color:"var(--t2)"}},"\uD83D\uDCF1 SMS sent to ",React.createElement("strong",{style:{color:"var(--t1)"}},"+91 "+ph)),
-      React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center",marginBottom:24}},otp.map(function(d,i){return React.createElement("input",{key:i,ref:function(el){refs.current[i]=el;},value:d,onChange:function(e){onO(i,e.target.value);},onKeyDown:function(e){onK(i,e);},className:"ob"+(d?" fl":""),maxLength:1,type:"tel"});})),
-      React.createElement("button",{onClick:doVerify,disabled:otp.join("").length!==6||loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginBottom:14,opacity:otp.join("").length!==6?0.5:1}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Signing in..."):"Verify and Sign In \u2713"),
-      React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:13,color:"var(--t3)"}},
-        React.createElement("button",{onClick:function(){setStep(1);},style:{background:"none",border:"none",color:"var(--t3)",cursor:"pointer",fontSize:13}},"\u2190 Change number"),
-        timer>0?React.createElement("span",null,"Resend in "+timer+"s"):React.createElement("button",{onClick:doResend,disabled:loading,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Resend OTP")
-      )
+    React.createElement("div",{style:{marginBottom:14}},
+      React.createElement("label",{className:"lbl"},"Full Name"),
+      React.createElement("div",{style:{position:"relative"}},
+        React.createElement("span",{className:"fi"},"👤"),
+        React.createElement("input",{value:nm,onChange:function(e){setNm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.nm;return o;});},className:"field hi"+(errs.nm?" err":""),placeholder:"Your full name"})
+      ),
+      errs.nm&&React.createElement("div",{className:"em"},errs.nm)
+    ),
+    React.createElement("div",{style:{marginBottom:14}},
+      React.createElement("label",{className:"lbl"},"Email Address"),
+      React.createElement("div",{style:{position:"relative"}},
+        React.createElement("span",{className:"fi"},"✉️"),
+        React.createElement("input",{value:em,onChange:function(e){setEm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.em;return o;});},className:"field hi"+(errs.em?" err":""),placeholder:"you@email.com",type:"email"})
+      ),
+      errs.em&&React.createElement("div",{className:"em"},errs.em)
+    ),
+    React.createElement("div",{style:{marginBottom:14}},
+      React.createElement("label",{className:"lbl"},"Password"),
+      React.createElement("div",{style:{position:"relative"}},
+        React.createElement("span",{className:"fi"},"🔒"),
+        React.createElement("input",{value:pw,onChange:function(e){setPw(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.pw;return o;});},className:"field hi"+(errs.pw?" err":""),placeholder:"Min 8 characters",type:"password"})
+      ),
+      pw&&React.createElement("div",null,
+        React.createElement("div",{className:"pwbar"},[1,2,3,4].map(function(i){return React.createElement("div",{key:i,className:"pwseg",style:{background:psc>=i?pwC[psc]:"var(--s3)"}})})),
+        React.createElement("div",{style:{fontSize:11,color:pwC[psc],marginTop:3,fontWeight:600}},pwL[psc])
+      ),
+      errs.pw&&React.createElement("div",{className:"em"},errs.pw)
+    ),
+    React.createElement("div",{style:{marginBottom:20}},
+      React.createElement("label",{className:"lbl"},"Confirm Password"),
+      React.createElement("div",{style:{position:"relative"}},
+        React.createElement("span",{className:"fi"},"🔒"),
+        React.createElement("input",{value:co,onChange:function(e){setCo(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.co;return o;});},className:"field hi"+(errs.co?" err":""),placeholder:"Repeat password",type:"password"})
+      ),
+      co&&co===pw&&React.createElement("div",{className:"om"},"Passwords match"),
+      errs.co&&React.createElement("div",{className:"em"},errs.co)
+    ),
+    React.createElement("button",{onClick:doSignup,disabled:loading,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:16,marginBottom:12}},
+      loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Creating account..."):"Create Account"
+    ),
+    React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
+      React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}}),
+      React.createElement("span",{style:{color:"var(--t3)",fontSize:12,fontWeight:600}},"OR"),
+      React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}})
+    ),
+    React.createElement("button",{onClick:doGoogleSignup,disabled:loading,className:"btn",style:{width:"100%",padding:"13px 0",borderRadius:14,fontSize:15,fontWeight:600,background:"#fff",color:"#1f2937",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:14}},
+      React.createElement("img",{src:"https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",style:{width:20,height:20}}),
+      "Sign up with Google"
+    ),
+    React.createElement("div",{style:{textAlign:"center"}},
+      React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"Already have an account? "),
+      React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Log In")
     )
   );
 }
 
-/* =====================
-   USER DASHBOARD
-   ===================== */
+
+function LoginFlow(props){
+  var [em,setEm]=useState(""); var [pw,setPw]=useState("");
+  var [errs,setErrs]=useState({}); var [loading,setLoading]=useState(false); var [al,setAl]=useState(null);
+  function getEmailErrMsg(code){
+    if(code==="auth/user-not-found"||code==="auth/invalid-credential")return "Wrong email or password. Please try again.";
+    if(code==="auth/wrong-password")return "Wrong password. Please try again.";
+    if(code==="auth/invalid-email")return "Enter a valid email address.";
+    if(code==="auth/user-disabled")return "This account has been disabled.";
+    if(code==="auth/too-many-requests")return "Too many failed attempts. Try again later.";
+    if(code==="auth/network-request-failed")return "No internet. Check your connection.";
+    return "Login failed. Please try again.";
+  }
+  function doLogin(){
+    var e={};
+    if(!vE(em))e.em="Enter a valid email address";
+    if(!pw)e.pw="Enter your password";
+    setErrs(e);if(Object.keys(e).length>0)return;
+    if(!auth||!FIREBASE_OK||typeof firebase==="undefined"){
+      setAl({type:"err",msg:"Firebase not available. Please open on Vercel."});return;
+    }
+    setLoading(true);setAl(null);
+    auth.signInWithEmailAndPassword(em.trim().toLowerCase(),pw).then(function(cred){
+      var fireUser=cred.user;
+      if(!fireUser.emailVerified){
+        auth.signOut();
+        setLoading(false);
+        setAl({type:"err",msg:"Please verify your email before logging in. Check your inbox for the verification link."});
+        return;
+      }
+      sbGet("users","?uid=eq."+fireUser.uid).then(function(users){
+        var ex=users&&users.length>0?users[0]:null;
+        var isAdmin=fireUser.email==="admin@servora.in";
+        var role=isAdmin?"admin":(ex?ex.role:"user");
+        var u={uid:fireUser.uid,name:fireUser.displayName||ex&&ex.name||"",email:fireUser.email||"",role:role,id:ex?ex.id:""};
+        if(!ex){sbPost("users",{uid:fireUser.uid,name:u.name,email:u.email,phone:"",role:role,emailVerified:true});}
+        props.setUser(u);setLoading(false);
+        if(role==="admin")props.go("admin");else if(role==="business")props.go("bizDash");else props.go("dash");
+      }).catch(function(){
+        var u={uid:fireUser.uid,name:fireUser.displayName||"",email:fireUser.email||"",role:"user"};
+        props.setUser(u);setLoading(false);props.go("dash");
+      });
+    }).catch(function(err){
+      setLoading(false);
+      setAl({type:"err",msg:getEmailErrMsg(err&&err.code||"")});
+    });
+  }
+  function doForgotPw(){
+    if(!vE(em)){setAl({type:"err",msg:"Enter your email address first, then click Forgot password."});return;}
+    if(!auth||!FIREBASE_OK){setAl({type:"err",msg:"Firebase not available."});return;}
+    setLoading(true);
+    auth.sendPasswordResetEmail(em.trim().toLowerCase()).then(function(){
+      setLoading(false);
+      setAl({type:"ok",msg:"Password reset email sent! Check your inbox."});
+    }).catch(function(err){
+      setLoading(false);
+      var code=err&&err.code||"";
+      setAl({type:"err",msg:code==="auth/user-not-found"?"No account found with this email.":"Failed to send reset email. Try again."});
+    });
+  }
+  function doGoogleLogin(){
+    if(!auth||!FIREBASE_OK||typeof firebase==="undefined"){setAl({type:"err",msg:"Login service not available. Please open on Vercel."});return;}
+    setLoading(true);setAl(null);
+    var provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:"select_account"});
+    auth.signInWithPopup(provider).then(function(result){
+      setLoading(false);
+      handleGoogleUser(result.user,props.setUser,props.go);
+    }).catch(function(err){
+      setLoading(false);
+      var code=err&&err.code||"";
+      if(code==="auth/popup-blocked"||code==="auth/popup-closed-by-user"){
+        auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+      } else {
+        setAl({type:"err",msg:"Google login failed. Please try again."});
+      }
+    });
+  }
+  return React.createElement("div",null,
+    React.createElement("h2",{style:{fontSize:24,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Welcome Back"),
+    React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.6,marginBottom:20}},"Sign in to your Servora account"),
+    al&&React.createElement(AB,{type:al.type},al.msg),
+    React.createElement("div",{style:{marginBottom:14}},
+      React.createElement("label",{className:"lbl"},"Email Address"),
+      React.createElement("div",{style:{position:"relative"}},
+        React.createElement("span",{className:"fi"},"✉️"),
+        React.createElement("input",{value:em,onChange:function(e){setEm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.em;return o;});},className:"field hi"+(errs.em?" err":""),placeholder:"you@email.com",type:"email"})
+      ),
+      errs.em&&React.createElement("div",{className:"em"},errs.em)
+    ),
+    React.createElement("div",{style:{marginBottom:6}},
+      React.createElement("label",{className:"lbl"},"Password"),
+      React.createElement("div",{style:{position:"relative"}},
+        React.createElement("span",{className:"fi"},"🔒"),
+        React.createElement("input",{value:pw,onChange:function(e){setPw(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.pw;return o;});},className:"field hi"+(errs.pw?" err":""),placeholder:"Your password",type:"password"})
+      ),
+      errs.pw&&React.createElement("div",{className:"em"},errs.pw)
+    ),
+    React.createElement("div",{style:{textAlign:"right",marginBottom:18}},
+      React.createElement("button",{onClick:doForgotPw,disabled:loading,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:12,fontWeight:600}},"Forgot password?")
+    ),
+    React.createElement("button",{onClick:doLogin,disabled:loading,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:16,marginBottom:12}},
+      loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Signing in..."):"Sign In"
+    ),
+    React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
+      React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}}),
+      React.createElement("span",{style:{color:"var(--t3)",fontSize:12,fontWeight:600}},"OR"),
+      React.createElement("div",{style:{flex:1,height:1,background:"var(--b2)"}})
+    ),
+    React.createElement("button",{onClick:doGoogleLogin,disabled:loading,className:"btn",style:{width:"100%",padding:"13px 0",borderRadius:14,fontSize:15,fontWeight:600,background:"#fff",color:"#1f2937",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:14}},
+      React.createElement("img",{src:"https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",style:{width:20,height:20}}),
+      "Continue with Google"
+    ),
+    React.createElement("div",{style:{textAlign:"center"}},
+      React.createElement("span",{style:{color:"var(--t3)",fontSize:13}},"New to Servora? "),
+      React.createElement("button",{onClick:props.sw,style:{background:"none",border:"none",color:"var(--c)",cursor:"pointer",fontSize:13,fontWeight:600}},"Create Account")
+    )
+  );
+}
+
 function AiChat(props){
   var [msgs,setMsgs]=useState([{role:"assistant",text:"Hi! I'm Servora AI. I help you find the best local services in Pune. What do you need today?"}]);
   var [inp,setInp]=useState(""); var [loading,setLoading]=useState(false);
@@ -1848,9 +1832,14 @@ function AdminPanel(){
 /* =====================
    ROOT APP (updated routing)
    ===================== */
+
+/* =====================
+   ROOT APP - onAuthStateChanged session persistence
+   ===================== */
 function App(){
   var [page,setPage]=useState("home"); var [user,setUser]=useState(null);
   var [selBiz,setSelBiz]=useState(null); var [chatOpen,setChatOpen]=useState(false);
+  var [authReady,setAuthReady]=useState(!FIREBASE_OK);
   function go(p){
     if(p==="chat"){setChatOpen(true);return;}
     if(p==="biz-onboard"){setPage("biz-onboard");window.scrollTo({top:0,behavior:"smooth"});return;}
@@ -1858,14 +1847,37 @@ function App(){
     if(p==="account"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business")setPage("bizDash");else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
     setPage(p);window.scrollTo({top:0,behavior:"smooth"});
   }
+  /* Session persistence via onAuthStateChanged */
   useEffect(function(){
-    if (!auth || !FIREBASE_OK) return;
-    auth.getRedirectResult().then(function(result) {
-      if (result && result.user) {
-        handleGoogleUser(result.user, setUser, go);
+    if(!auth||!FIREBASE_OK){setAuthReady(true);return;}
+    auth.getRedirectResult().then(function(result){if(result&&result.user)handleGoogleUser(result.user,setUser,go);}).catch(function(){});
+    var unsub=auth.onAuthStateChanged(function(fireUser){
+      if(fireUser&&fireUser.emailVerified){
+        sbGet("users","?uid=eq."+fireUser.uid).then(function(users){
+          var ex=users&&users.length>0?users[0]:null;
+          var isAdmin=fireUser.email==="admin@servora.in";
+          var role=isAdmin?"admin":(ex?ex.role:"user");
+          setUser({uid:fireUser.uid,name:fireUser.displayName||ex&&ex.name||"",email:fireUser.email||"",photo:fireUser.photoURL||"",role:role,id:ex?ex.id:""});
+          setAuthReady(true);
+        }).catch(function(){
+          setUser({uid:fireUser.uid,name:fireUser.displayName||"",email:fireUser.email||"",role:"user"});
+          setAuthReady(true);
+        });
+      } else {
+        if(fireUser)auth.signOut().catch(function(){});
+        setUser(null);setAuthReady(true);
       }
-    }).catch(function(err) { console.warn("Redirect result:", err); });
-  }, []);
+    });
+    return function(){unsub();};
+  },[]);
+  if(!authReady){
+    return React.createElement("div",{style:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--bg)"}},
+      React.createElement("div",{style:{textAlign:"center"}},
+        React.createElement("div",{className:"spinner",style:{width:32,height:32,margin:"0 auto 12px"}}),
+        React.createElement("div",{style:{color:"var(--t3)",fontSize:13,fontWeight:600}},"Loading Servora...")
+      )
+    );
+  }
   function renderPage(){
     if(page==="home")        return React.createElement(HomePage,       {go:go,setBiz:setSelBiz});
     if(page==="listings")    return React.createElement(ListingsPage,   {go:go,setBiz:setSelBiz});
