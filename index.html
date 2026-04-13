@@ -250,6 +250,15 @@ input,select,textarea{font-size:16px!important}
 /* Announcement banner */
 .ann-banner{background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(129,140,248,.08));border:1px solid rgba(34,211,238,.2);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start}
 
+/* ── BUSINESS LISTING SYSTEM ── */
+.biz-form-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:1100;display:flex;align-items:flex-end}
+.biz-form-sheet{width:100%;background:var(--bg2);border-radius:28px 28px 0 0;border-top:1px solid var(--b2);max-height:94vh;overflow-y:auto;animation:slideUp .3s ease;padding:24px 20px 44px}
+.my-biz-card{background:var(--s1);border:1px solid var(--b1);border-radius:20px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden;transition:all .25s}
+.my-biz-card:active{transform:scale(.985)}
+.listing-card{background:var(--s1);border:1px solid var(--b1);border-radius:20px;overflow:hidden;margin-bottom:14px;transition:all .25s}
+.listing-card:active{transform:scale(.985)}
+.del-confirm-box{background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.25);border-radius:14px;padding:12px 14px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
 /* ── HOME UPGRADE STYLES ── */
 /* Hide scrollbar on horizontal scroll rows */
 .hscroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-ms-overflow-style:none}
@@ -383,6 +392,13 @@ function sbPatch(collection, keyField, keyValue, data) {
       return snap.docs[0].ref.update(data);
     }
   }).catch(function(e) { console.error("sbPatch error:", e); return null; });
+}
+
+function sbDelete(collection, id) {
+  if (!db) return Promise.resolve(null);
+  return db.collection(collection).doc(id).delete().catch(function(e) {
+    console.error("sbDelete error:", e); return null;
+  });
 }
 
 /* =====================
@@ -761,14 +777,24 @@ function ListingsPage(props){
   var [location,setLocation]=useState("All");
   var [list,setList]=useState(BIZ); var [loading,setLoading]=useState(true);
   useEffect(function(){setLoading(true);sbGet("businesses","?status=eq.approved&order=rating.desc").then(function(d){setList(d&&d.length>0?d:BIZ);setLoading(false);}).catch(function(){setList(BIZ);setLoading(false);});}, []);
-  var cats=["All"].concat(list.reduce(function(a,b){if(a.indexOf(b.cat)<0)a.push(b.cat);return a;},[]));
-  var locs=["All"].concat(list.reduce(function(a,b){if(a.indexOf(b.loc)<0)a.push(b.loc);return a;},[]));
-  var filtered=list.filter(function(b){
+  var cats=["All"].concat(list.reduce(function(a,b){if(a.indexOf(b.cat||b.category)<0)a.push(b.cat||b.category);return a;},[]));
+  var locs=["All"].concat(list.reduce(function(a,b){var l=b.loc||b.city||b.location||"";if(l&&a.indexOf(l)<0)a.push(l);return a;},[]));
+
+  /* Normalize Firestore biz to have name/cat/loc for filtering */
+  function normBiz(b){
+    if(b.businessName){
+      return Object.assign({},b,{name:b.businessName,cat:b.category||"",loc:b.city||b.location||"Pune",_isReal:true});
+    }
+    return b;
+  }
+  var normalized=list.map(normBiz);
+
+  var filtered=normalized.filter(function(b){
     if(cat!=="All"&&b.cat!==cat)return false;
     if(location!=="All"&&b.loc!==location)return false;
     if(verified&&!b.verified)return false;
     if(avail&&!b.avail)return false;
-    if(search){var sl=search.toLowerCase();if(b.name.toLowerCase().indexOf(sl)<0&&b.cat.toLowerCase().indexOf(sl)<0)return false;}
+    if(search){var sl=search.toLowerCase();var n=(b.name||"").toLowerCase();var c=(b.cat||"").toLowerCase();var l=(b.loc||"").toLowerCase();if(n.indexOf(sl)<0&&c.indexOf(sl)<0&&l.indexOf(sl)<0)return false;}
     return true;
   }).sort(function(a,b){return sort==="rating"?b.rating-a.rating:sort==="price"?a.price-b.price:b.reviews-a.reviews;});
 
@@ -824,7 +850,10 @@ function ListingsPage(props){
     React.createElement("div",{style:{padding:"16px 20px",display:"flex",flexDirection:"column",gap:14}},
       loading?[1,2,3].map(function(i){return React.createElement("div",{key:i,className:"card",style:{padding:20,borderRadius:20,height:120}},React.createElement("div",{className:"skel",style:{height:80,borderRadius:10}}));}):
       filtered.length===0?React.createElement("div",{style:{textAlign:"center",padding:60,color:"var(--t3)"}},React.createElement("div",{style:{fontSize:48,marginBottom:12}},"\uD83D\uDD0D"),React.createElement("div",{style:{fontSize:17,fontWeight:600}},"No results found"),React.createElement("div",{style:{fontSize:13,marginTop:6}},"Try a different filter or search term")):
-      filtered.map(function(b){return React.createElement(BizCard,{key:b.id,b:b,onClick:function(){setBiz(b);go("detail");}});})
+      filtered.map(function(b){
+        if(b._isReal||b.businessName){return React.createElement(ListingCard,{key:b.id,biz:b});}
+        return React.createElement(BizCard,{key:b.id,b:b,onClick:function(){setBiz(b);go("detail");}});
+      })
     ),
 
     /* ── SORT SHEET ── */
@@ -1468,6 +1497,258 @@ function BusinessOnboard(props){
 }
 
 /* =====================
+   ADD BUSINESS FORM
+   ===================== */
+function AddBusinessForm(props){
+  var user=props.user,onClose=props.onClose,onSaved=props.onSaved;
+  var editId=props.editId||null;
+  var ed=props.editData||null;
+  var [nm,setNm]=useState(ed?ed.businessName||"":"");
+  var [cat,setCat]=useState(ed?ed.category||"":"");
+  var [desc,setDesc]=useState(ed?ed.description||"":"");
+  var [ph,setPh]=useState(ed?ed.phone||"":"");
+  var [em,setEm]=useState(ed?ed.email||"":(user&&user.email||""));
+  var [city,setCity]=useState(ed?ed.city||"Pune":"Pune");
+  var [addr,setAddr]=useState(ed?ed.address||"":"");
+  var [imgUrl,setImgUrl]=useState(ed?ed.imageUrl||"":"");
+  var [errs,setErrs]=useState({});
+  var [loading,setLoading]=useState(false);
+  var [al,setAl]=useState(null);
+  var CAT_OPTS=["AC Repair","B2B Services","Beauty & Salon","Catering","Car Hire","Cleaning","Coaching","Construction","Dentist","Doctor","Education","Electrician","Event Management","Finance","Food & Restaurant","Furniture","Gym & Fitness","Home Services","Hospital","Interior Design","IT Services","Jobs","Legal Services","Logistics","Mechanic","Packers & Movers","Painter","Pest Control","Pet Care","Photography","Plumber","Real Estate","Repairs","Security","Tailor","Travel & Tours","Veterinary","Wedding","Yoga"];
+  function doValidate(){
+    var e={};
+    if(!nm.trim())e.nm="Business name is required";
+    if(!cat)e.cat="Please select a category";
+    if(!desc.trim()||desc.trim().length<20)e.desc="Description needs at least 20 characters";
+    if(!vP(ph))e.ph="Valid 10-digit phone required";
+    if(!vE(em))e.em="Valid email required";
+    if(!city.trim())e.city="City is required";
+    if(!addr.trim())e.addr="Address is required";
+    return e;
+  }
+  function handleSave(){
+    var e=doValidate();setErrs(e);
+    if(Object.keys(e).length>0)return;
+    if(!db||!FIREBASE_OK){setAl({type:"err",msg:"Firebase not available. Open on Vercel."});return;}
+    setLoading(true);setAl(null);
+    var data={ownerId:user.uid,businessName:nm.trim(),category:cat,description:desc.trim(),phone:ph,email:em.trim().toLowerCase(),city:city.trim(),address:addr.trim(),imageUrl:imgUrl.trim(),status:"pending"};
+    var prom;
+    if(editId){data.updatedAt=new Date().toISOString();prom=db.collection("businesses").doc(editId).update(data);}
+    else{data.createdAt=new Date().toISOString();prom=db.collection("businesses").add(data);}
+    prom.then(function(){setLoading(false);onSaved&&onSaved();}).catch(function(){setLoading(false);setAl({type:"err",msg:"Save failed. Please try again."});});
+  }
+  function stopProp(e){e.stopPropagation();}
+  function chNm(e){setNm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.nm;return o;});}
+  function chCat(e){setCat(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.cat;return o;});}
+  function chDesc(e){setDesc(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.desc;return o;});}
+  function chPh(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs(function(x){var o=Object.assign({},x);delete o.ph;return o;});}
+  function chEm(e){setEm(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.em;return o;});}
+  function chCity(e){setCity(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.city;return o;});}
+  function chAddr(e){setAddr(e.target.value);setErrs(function(x){var o=Object.assign({},x);delete o.addr;return o;});}
+  function chImg(e){setImgUrl(e.target.value);}
+  function onImgErr(e){e.target.style.display="none";}
+  return React.createElement("div",{className:"biz-form-overlay",onClick:onClose},
+    React.createElement("div",{className:"biz-form-sheet",onClick:stopProp},
+      React.createElement("div",{style:{width:36,height:4,borderRadius:2,background:"var(--b2)",margin:"0 auto 20px"}}),
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:4}},
+        React.createElement("div",{style:{fontSize:26}},editId?"\u270F\uFE0F":"\uD83C\uDFEA"),
+        React.createElement("h3",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins"}},editId?"Edit Business":"Add Your Business")
+      ),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:20}},"Your listing goes live after admin review."),
+      al&&React.createElement(AB,{type:al.type},al.msg),
+      React.createElement("div",{style:{marginBottom:14}},
+        React.createElement("label",{className:"lbl"},"Business Name *"),
+        React.createElement("input",{value:nm,onChange:chNm,className:"field"+(errs.nm?" err":""),placeholder:"e.g. Rahul AC Repair Services"}),
+        errs.nm&&React.createElement("div",{className:"em"},errs.nm)
+      ),
+      React.createElement("div",{style:{marginBottom:14}},
+        React.createElement("label",{className:"lbl"},"Category *"),
+        React.createElement("select",{value:cat,onChange:chCat,className:"field"+(errs.cat?" err":""),style:{appearance:"none",WebkitAppearance:"none"}},
+          React.createElement("option",{value:""},"Select category..."),
+          CAT_OPTS.map(function(c){return React.createElement("option",{key:c,value:c},c);})
+        ),
+        errs.cat&&React.createElement("div",{className:"em"},errs.cat)
+      ),
+      React.createElement("div",{style:{marginBottom:14}},
+        React.createElement("label",{className:"lbl"},"Description * (min 20 chars)"),
+        React.createElement("textarea",{value:desc,onChange:chDesc,className:"field"+(errs.desc?" err":""),rows:3,placeholder:"Describe your services, experience, and specialties...",style:{resize:"none"}}),
+        React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginTop:4}},
+          errs.desc?React.createElement("div",{className:"em"},errs.desc):React.createElement("span",null),
+          React.createElement("span",{style:{fontSize:11,color:"var(--t3)"}},desc.length+"/500")
+        )
+      ),
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}},
+        React.createElement("div",null,
+          React.createElement("label",{className:"lbl"},"Phone *"),
+          React.createElement("input",{value:ph,onChange:chPh,className:"field"+(errs.ph?" err":""),placeholder:"10-digit",type:"tel"}),
+          errs.ph&&React.createElement("div",{className:"em"},errs.ph)
+        ),
+        React.createElement("div",null,
+          React.createElement("label",{className:"lbl"},"Email *"),
+          React.createElement("input",{value:em,onChange:chEm,className:"field"+(errs.em?" err":""),placeholder:"biz@email.com",type:"email"}),
+          errs.em&&React.createElement("div",{className:"em"},errs.em)
+        )
+      ),
+      React.createElement("div",{style:{marginBottom:14}},
+        React.createElement("label",{className:"lbl"},"City *"),
+        React.createElement("input",{value:city,onChange:chCity,className:"field"+(errs.city?" err":""),placeholder:"e.g. Pune"}),
+        errs.city&&React.createElement("div",{className:"em"},errs.city)
+      ),
+      React.createElement("div",{style:{marginBottom:14}},
+        React.createElement("label",{className:"lbl"},"Full Address *"),
+        React.createElement("textarea",{value:addr,onChange:chAddr,className:"field"+(errs.addr?" err":""),rows:2,placeholder:"Street, area, landmark...",style:{resize:"none"}}),
+        errs.addr&&React.createElement("div",{className:"em"},errs.addr)
+      ),
+      React.createElement("div",{style:{marginBottom:24}},
+        React.createElement("label",{className:"lbl"},"Business Image URL (Optional)"),
+        React.createElement("input",{value:imgUrl,onChange:chImg,className:"field",placeholder:"Paste image link (Imgur, Google Drive, etc.)"}),
+        React.createElement("div",{style:{fontSize:11,color:"var(--t3)",marginTop:4}},"\uD83D\uDCA1 Upload to imgur.com and paste the direct link"),
+        imgUrl&&React.createElement("img",{src:imgUrl,alt:"Preview",onError:onImgErr,style:{width:"100%",height:120,objectFit:"cover",borderRadius:10,marginTop:8,display:"block"}})
+      ),
+      React.createElement("button",{onClick:handleSave,disabled:loading,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:16}},
+        loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}},React.createElement(Spin,null),"Saving..."):
+        editId?"\u270F\uFE0F Update Business":"\uD83D\uDE80 Submit for Review"
+      ),
+      React.createElement("div",{style:{height:8}})
+    )
+  );
+}
+
+/* =====================
+   MY BIZ CARD
+   ===================== */
+function MyBizCard(props){
+  var b=props.biz,onEdit=props.onEdit,onDelete=props.onDelete;
+  var [showDel,setShowDel]=useState(false);
+  function doEdit(){onEdit&&onEdit(b);}
+  function askDel(){setShowDel(true);}
+  function cancelDel(){setShowDel(false);}
+  function confirmDel(){setShowDel(false);onDelete&&onDelete(b.id);}
+  function doCall(e){e.stopPropagation();window.open("tel:+91"+(b.phone||""),"_self");}
+  function doEmail(e){e.stopPropagation();window.open("mailto:"+(b.email||""));}
+  function onImgErr(e){e.target.style.display="none";}
+  var sc=b.status==="approved"?"var(--green)":b.status==="rejected"?"var(--rose)":"var(--amber)";
+  var sb=b.status==="approved"?"rgba(52,211,153,.1)":b.status==="rejected"?"rgba(251,113,133,.1)":"rgba(251,191,36,.1)";
+  var si=b.status==="approved"?"\u2705":b.status==="rejected"?"\u274C":"\u23F3";
+  var statusLabel=b.status?(b.status.charAt(0).toUpperCase()+b.status.slice(1)):"Pending";
+  return React.createElement("div",{className:"my-biz-card"},
+    React.createElement("div",{style:{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle at top right,rgba(34,211,238,.06),transparent)",pointerEvents:"none"}}),
+    React.createElement("div",{style:{display:"flex",gap:12,marginBottom:12}},
+      b.imageUrl?
+        React.createElement("img",{src:b.imageUrl,alt:b.businessName,onError:onImgErr,style:{width:56,height:56,borderRadius:14,objectFit:"cover",flexShrink:0}}):
+        React.createElement("div",{style:{width:56,height:56,borderRadius:14,background:"rgba(34,211,238,.1)",border:"1px solid rgba(34,211,238,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}},"\uD83C\uDFEA"),
+      React.createElement("div",{style:{flex:1,minWidth:0}},
+        React.createElement("div",{style:{fontWeight:700,fontSize:15,fontFamily:"Poppins",marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},(b.businessName||b.name||"Business")),
+        React.createElement("div",{style:{fontSize:12,color:"var(--t3)",marginBottom:6}},(b.category||b.cat||"")+" \u00B7 \uD83D\uDCCD "+(b.city||b.location||"Pune")),
+        React.createElement("div",{style:{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 10px",borderRadius:999,background:sb,fontSize:11,fontWeight:700,color:sc}},si," ",statusLabel)
+      )
+    ),
+    (b.description||b.about)&&React.createElement("p",{style:{color:"var(--t2)",fontSize:13,lineHeight:1.6,marginBottom:12,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}},(b.description||b.about)),
+    React.createElement("div",{style:{display:"flex",gap:8}},
+      React.createElement("button",{onClick:doEdit,className:"btn bo",style:{flex:1,padding:"9px 0",borderRadius:10,fontSize:13}},"\u270F\uFE0F Edit"),
+      React.createElement("button",{onClick:doCall,className:"btn bs",style:{flex:1,padding:"9px 0",borderRadius:10,fontSize:13}},"\uD83D\uDCDE Call"),
+      React.createElement("button",{onClick:doEmail,className:"btn bw",style:{flex:1,padding:"9px 0",borderRadius:10,fontSize:13}},"\u2709\uFE0F Email"),
+      React.createElement("button",{onClick:askDel,className:"btn bd",style:{padding:"9px 12px",borderRadius:10,fontSize:13}},"\uD83D\uDDD1\uFE0F")
+    ),
+    showDel&&React.createElement("div",{className:"del-confirm-box"},
+      React.createElement("span",{style:{fontSize:16}},"\u26A0\uFE0F"),
+      React.createElement("span",{style:{fontSize:13,color:"var(--t2)",flex:1}},"Delete this listing permanently?"),
+      React.createElement("button",{onClick:cancelDel,className:"btn bo",style:{padding:"6px 12px",borderRadius:8,fontSize:12}},"Cancel"),
+      React.createElement("button",{onClick:confirmDel,className:"btn bd",style:{padding:"6px 12px",borderRadius:8,fontSize:12}},"Delete")
+    )
+  );
+}
+
+/* =====================
+   LISTING CARD (Explore page - Firestore businesses)
+   ===================== */
+function ListingCard(props){
+  var b=props.biz;
+  function doCall(e){e.stopPropagation();window.open("tel:+91"+(b.phone||""),"_self");}
+  function doEmail(e){e.stopPropagation();window.open("mailto:"+(b.email||""));}
+  function onImgErr(e){e.target.style.height="0";e.target.style.display="none";}
+  return React.createElement("div",{className:"listing-card"},
+    b.imageUrl?
+      React.createElement("img",{src:b.imageUrl,alt:(b.businessName||b.name),onError:onImgErr,style:{width:"100%",height:160,objectFit:"cover",display:"block"}}):
+      React.createElement("div",{style:{height:100,background:"linear-gradient(135deg,rgba(34,211,238,.08),rgba(129,140,248,.08))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}},"\uD83C\uDFEA"),
+    React.createElement("div",{style:{padding:"14px 16px 16px"}},
+      React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}},
+        React.createElement("div",{style:{flex:1,minWidth:0}},
+          React.createElement("div",{style:{fontWeight:700,fontSize:15,fontFamily:"Poppins",marginBottom:3}},(b.businessName||b.name||"Business")),
+          React.createElement("div",{style:{fontSize:12,color:"var(--t3)"}},(b.category||b.cat||"")+" \u00B7 \uD83D\uDCCD "+(b.city||b.location||b.loc||"Pune"))
+        ),
+        React.createElement("span",{style:{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:999,background:"rgba(34,211,238,.1)",color:"var(--c)",border:"1px solid rgba(34,211,238,.2)",flexShrink:0,marginLeft:8}},"NEW")
+      ),
+      (b.description||b.about)&&React.createElement("p",{style:{color:"var(--t2)",fontSize:13,lineHeight:1.6,marginBottom:12,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}},(b.description||b.about)),
+      React.createElement("div",{style:{display:"flex",gap:8}},
+        React.createElement("button",{onClick:doCall,className:"btn bp",style:{flex:1,padding:"10px 0",borderRadius:10,fontSize:13}},"\uD83D\uDCDE Call"),
+        b.email&&React.createElement("button",{onClick:doEmail,className:"btn bo",style:{flex:1,padding:"10px 0",borderRadius:10,fontSize:13}},"\u2709\uFE0F Email")
+      )
+    )
+  );
+}
+
+/* =====================
+   MY LISTINGS TAB (inside UserDash)
+   ===================== */
+function MyListingsTab(props){
+  var user=props.user;
+  var [myBiz,setMyBiz]=useState([]);
+  var [loading,setLoading]=useState(true);
+  var [showForm,setShowForm]=useState(false);
+  var [editBiz,setEditBiz]=useState(null);
+  var [toast,setToast]=useState("");
+  function loadMyBiz(){
+    if(!user||!user.uid){setLoading(false);return;}
+    setLoading(true);
+    sbGet("businesses","?ownerId=eq."+user.uid).then(function(d){
+      setMyBiz(d&&d.length>0?d:[]);setLoading(false);
+    }).catch(function(){setMyBiz([]);setLoading(false);});
+  }
+  useEffect(function(){loadMyBiz();},[]);
+  function openAdd(){setEditBiz(null);setShowForm(true);}
+  function openEdit(b){setEditBiz(b);setShowForm(true);}
+  function closeForm(){setShowForm(false);setEditBiz(null);}
+  function handleSaved(){
+    setShowForm(false);setEditBiz(null);
+    setToast("\u2705 Business saved! Pending admin review.");
+    setTimeout(function(){setToast("");},3500);
+    loadMyBiz();
+  }
+  function handleDelete(id){
+    sbDelete("businesses",id).then(function(){
+      setMyBiz(function(prev){return prev.filter(function(b){return b.id!==id;});});
+      setToast("\uD83D\uDDD1\uFE0F Business deleted.");
+      setTimeout(function(){setToast("");},3000);
+    });
+  }
+  return React.createElement("div",null,
+    toast&&React.createElement("div",{className:"abox aok",style:{marginBottom:14}},toast),
+    React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}},
+      React.createElement("div",null,
+        React.createElement("div",{style:{fontWeight:800,fontSize:17,fontFamily:"Poppins"}},"\uD83C\uDFEA My Listings"),
+        React.createElement("div",{style:{color:"var(--t3)",fontSize:12,marginTop:2}},
+          loading?"Loading...":(myBiz.length+" listing"+(myBiz.length===1?"":"s"))
+        )
+      ),
+      React.createElement("button",{onClick:openAdd,className:"btn bp",style:{padding:"10px 18px",borderRadius:12,fontSize:13}},"+ Add Business")
+    ),
+    loading?React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:40}},React.createElement(DL,null)):
+    myBiz.length===0?
+      React.createElement("div",{style:{textAlign:"center",padding:"40px 20px",background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:20}},
+        React.createElement("div",{style:{fontSize:52,marginBottom:12}},"\uD83C\uDFEA"),
+        React.createElement("div",{style:{fontWeight:700,fontSize:16,marginBottom:8}},"No businesses listed yet"),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.7,marginBottom:20}},"Add your business and start getting leads from customers in Pune."),
+        React.createElement("button",{onClick:openAdd,className:"btn bp",style:{padding:"13px 28px",borderRadius:12,fontSize:14}},"\uD83D\uDE80 List My First Business")
+      ):
+    React.createElement("div",null,
+      myBiz.map(function(b){return React.createElement(MyBizCard,{key:b.id,biz:b,onEdit:openEdit,onDelete:handleDelete});})
+    ),
+    showForm&&React.createElement(AddBusinessForm,{user:user,onClose:closeForm,onSaved:handleSaved,editId:editBiz?editBiz.id:null,editData:editBiz})
+  );
+}
+
+/* =====================
    ENHANCED USER DASHBOARD
    ===================== */
 function UserDash(props){
@@ -1479,7 +1760,7 @@ function UserDash(props){
   var REQS=[{name:"CleanMate Pro",msg:"Need deep cleaning for 2BHK",status:"Replied",time:"2 hr ago",color:"#22d3ee",icon:"🏠"},{name:"Dr. Priya Dental",msg:"Dental checkup appointment",status:"Confirmed",time:"Yesterday",color:"#fb7185",icon:"🦷"},{name:"Radiance Beauty",msg:"Bridal package enquiry",status:"Pending",time:"2 days ago",color:"#f472b6",icon:"✂️"}];
   var unread=NOTIFS.filter(function(n){return !n.read;}).length;
   useEffect(function(){if(!user||!user.phone)return;sbGet("leads","?customer_phone=eq."+user.phone).then(function(d){if(d&&d.length>0)setLeads(d);});}, []);
-  var TABS=[{id:"overview",icon:"🏠",label:"Overview"},{id:"requests",icon:"📋",label:"Requests"},{id:"saved",icon:"❤️",label:"Saved"},{id:"notifs",icon:"🔔",label:"Alerts"},{id:"settings",icon:"⚙️",label:"Settings"}];
+  var TABS=[{id:"overview",icon:"\uD83C\uDFE0",label:"Overview"},{id:"my-listings",icon:"\uD83C\uDFEA",label:"My Biz"},{id:"requests",icon:"\uD83D\uDCCB",label:"Requests"},{id:"saved",icon:"\u2764\uFE0F",label:"Saved"},{id:"notifs",icon:"\uD83D\uDD14",label:"Alerts"},{id:"settings",icon:"\u2699\uFE0F",label:"Settings"}];
   return React.createElement("div",{className:"page"},
     React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(34,211,238,.06),rgba(129,140,248,.06))",borderBottom:"1px solid var(--b1)",padding:"24px 20px 20px"}},
       React.createElement("div",{style:{display:"flex",gap:14,alignItems:"center",marginBottom:20}},
@@ -1530,6 +1811,7 @@ function UserDash(props){
           React.createElement("button",{onClick:function(){go("chat");},className:"btn bp",style:{width:"100%",padding:"12px 0",borderRadius:12,fontSize:14}},"Chat with AI →")
         )
       ),
+      tab==="my-listings"&&React.createElement(MyListingsTab,{user:user}),
       tab==="requests"&&React.createElement("div",null,
         REQS.map(function(r){
           return React.createElement("div",{key:r.name,className:"lead-card",style:{marginBottom:12}},
@@ -1837,11 +2119,12 @@ function AdminPanel(){
   function approve(id){sbPatch("businesses","id",id,{status:"approved"});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{status:"approved"}):b;});});}
   function reject(id){sbPatch("businesses","id",id,{status:"rejected"});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{status:"rejected"}):b;});});}
   function verify(id){sbPatch("businesses","id",id,{verified:true});setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{verified:true}):b;});});}
+  function delAdminBiz(id){sbDelete("businesses",id).then(function(){setBizList(function(l){return l.filter(function(b){return b.id!==id;});});});}
   function blockU(id,blk){sbPatch("users","id",id,{blocked:!blk});setUsers(function(l){return l.map(function(u){return u.id===id?Object.assign({},u,{blocked:!blk}):u;});});}
   function doAIMod(){setAiModLoad(true);callAI("Content moderator. Detect fake reviews/spam. Under 80 words.","1. BEST EVER BOOK NOW!!! new account\n2. AC repaired well fair price\n3. SCAM 5 reviews today same IP\n4. Good job minor delay satisfied").then(function(r){setAiMod(r);setAiModLoad(false);});}
   function sendBanner(){if(!banner.trim())return;sbPost("announcements",{message:banner,active:true});setBanner("");setBannerSent(true);setTimeout(function(){setBannerSent(false);},3000);}
   var pending=bizList.filter(function(b){return b.status==="pending";});
-  var filtBiz=search?bizList.filter(function(b){return b.name&&b.name.toLowerCase().indexOf(search.toLowerCase())>=0;}):bizList;
+  var filtBiz=search?bizList.filter(function(b){var n=(b.businessName||b.name||"").toLowerCase();return n.indexOf(search.toLowerCase())>=0;}):bizList;
   var LEAD_D=[4,7,3,12,8,15,9]; var maxL=Math.max.apply(null,LEAD_D);
   var DAYS2=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   var TABS=[{id:"overview",icon:"📊",label:"Overview"},{id:"businesses",icon:"🏢",label:"Biz",count:pending.length},{id:"users",icon:"👥",label:"Users"},{id:"leads",icon:"⚡",label:"Leads"},{id:"ai-mod",icon:"🛡️",label:"AI Mod"},{id:"announce",icon:"📢",label:"Announce"}];
@@ -1897,8 +2180,8 @@ function AdminPanel(){
             return React.createElement("div",{key:b.id,style:{display:"flex",alignItems:"center",gap:10,padding:"12px 0",borderBottom:"1px solid var(--b1)"}},
               React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#22d3ee22,#818cf822)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}},b.name&&b.name[0]||"B"),
               React.createElement("div",{style:{flex:1}},
-                React.createElement("div",{style:{fontWeight:600,fontSize:13}},b.name),
-                React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},(b.category||b.cat||"")+" · "+(b.location||b.loc||"Pune"))
+                React.createElement("div",{style:{fontWeight:600,fontSize:13}},(b.businessName||b.name||"Business")),
+                React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},(b.category||b.cat||"")+" · "+(b.city||b.location||b.loc||"Pune"))
               ),
               React.createElement("div",{style:{display:"flex",gap:6}},
                 React.createElement("button",{onClick:function(){approve(b.id);},className:"btn bs",style:{width:32,height:32,borderRadius:8,padding:0,fontSize:14}},"✓"),
@@ -1931,9 +2214,9 @@ function AdminPanel(){
                 React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:"var(--s2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}},b.icon||"🏢"),
                 React.createElement("div",{style:{flex:1}},
                   React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center",marginBottom:2}},
-                    React.createElement("span",{style:{fontWeight:700,fontSize:14}},b.name),b.verified&&React.createElement("span",{style:{fontSize:11}},"✅")
+                    React.createElement("span",{style:{fontWeight:700,fontSize:14}},(b.businessName||b.name||"Business")),b.verified&&React.createElement("span",{style:{fontSize:11}},"✅")
                   ),
-                  React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},(b.category||b.cat||"")+" · "+(b.location||b.loc||"Pune")),
+                  React.createElement("div",{style:{color:"var(--t3)",fontSize:11}},(b.category||b.cat||"")+" · "+(b.city||b.location||b.loc||"Pune")),
                   React.createElement("div",{style:{display:"flex",gap:4,marginTop:4}},
                     React.createElement("span",{className:"badge "+(b.plan==="elite"?"ba":b.plan==="pro"?"bv":"bc"),style:{fontSize:9}},b.plan||"free"),
                     React.createElement("span",{className:"badge "+(b.status==="approved"?"bg2":b.status==="rejected"?"br":"ba"),style:{fontSize:9}},b.status||"pending")
@@ -1943,7 +2226,8 @@ function AdminPanel(){
               React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
                 b.status!=="approved"&&React.createElement("button",{onClick:function(){approve(b.id);},className:"btn bs",style:{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,minWidth:60}},"✓ Approve"),
                 b.status!=="rejected"&&React.createElement("button",{onClick:function(){reject(b.id);},className:"btn bd",style:{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,minWidth:60}},"✗ Reject"),
-                !b.verified&&React.createElement("button",{onClick:function(){verify(b.id);},className:"btn bw",style:{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,minWidth:60}},"✅ Verify")
+                !b.verified&&React.createElement("button",{onClick:function(){verify(b.id);},className:"btn bw",style:{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,minWidth:60}},"✅ Verify"),
+                React.createElement("button",{onClick:function(){delAdminBiz(b.id);},className:"btn bd",style:{padding:"7px 12px",borderRadius:8,fontSize:11}},"\uD83D\uDDD1\uFE0F")
               )
             );
           })
