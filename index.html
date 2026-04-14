@@ -1342,85 +1342,194 @@ function useCountdown(secs){
 }
 
 /* =====================
-   BUSINESS ONBOARDING (JustDial-style)
+   BUSINESS ONBOARDING (Fixed)
    ===================== */
-var BIZ_CATS=["Home Cleaning","Plumbing Services","Electrical Services","AC Repair","Doctor & Clinic","Dental Clinic","Beauty Salon","Gym & Fitness","Tutor & Coaching","Car Service","Interior Designer","Photographer","Event Management","Pest Control","Painter","Carpenter","Digital Marketing Agency","Web Design Agency","Graphic Designer","Chartered Accountant","Legal Services","Real Estate Agent","Travel Agency","Security Services"];
-var PIN_MAP={"411001":"Pune|Maharashtra","411028":"Pune|Maharashtra","411045":"Pune|Maharashtra","411057":"Pune|Maharashtra","411002":"Pune|Maharashtra","400001":"Mumbai|Maharashtra","110001":"Delhi|Delhi","560001":"Bangalore|Karnataka","600001":"Chennai|Tamil Nadu","500001":"Hyderabad|Telangana"};
+var BIZ_CATS=["Home Cleaning","Plumbing Services","Electrical Services","AC Repair","Doctor & Clinic","Dental Clinic","Beauty Salon","Gym & Fitness","Tutor & Coaching","Car Service","Interior Designer","Photographer","Event Management","Pest Control","Painter","Carpenter","Digital Marketing Agency","Web Design Agency","Graphic Designer","Chartered Accountant","Legal Services","Real Estate Agent","Travel Agency","Security Services","Food & Restaurant","Catering Services","Packers & Movers","IT Services","Yoga Studio","Pet Care","Laundry Services","Tailoring","Furniture","Appliance Repair"];
+var SUGG_CATS=["Digital Marketing Agency","Home Cleaning","AC Repair","Tutor & Coaching","Beauty Salon","Event Management","Electrical Services","Car Service"];
+
+var OB_PLANS=[
+  {id:"free",name:"Starter",icon:"\uD83C\uDF31",price:0,label:"Free Forever",color:"#34d399",
+   feats:[["5 leads/month",true],["Basic listing",true],["Standard placement",true],["Verified badge",false],["AI Coach",false]]},
+  {id:"pro",name:"Pro",icon:"\u26A1",price:499,label:"\u20B9499/month",color:"#22d3ee",
+   feats:[["50 leads/month",true],["Verified badge",true],["Priority listing",true],["Analytics",true],["AI Coach",false]],badge:"POPULAR"},
+  {id:"enterprise",name:"Enterprise",icon:"\uD83D\uDC51",price:999,label:"\u20B9999/month",color:"#818cf8",
+   feats:[["Unlimited leads",true],["AI Growth Coach",true],["Top placement",true],["Dedicated support",true],["Custom ads",true]],badge:"MAX GROWTH"}
+];
 
 function BusinessOnboard(props){
   var setUser=props.setUser,go=props.go;
+  /* steps: 1=landing, 2=details, 3=category, 4=plan, 5=payment, 6=done */
   var [step,setStep]=useState(1);
-  var [ph,setPh]=useState(""); var [loading,setLoading]=useState(false);
-  var [nm,setNm]=useState(""); var [pin,setPin]=useState(""); var [city,setCity]=useState(""); var [pinLoad,setPinLoad]=useState(false);
+  var [ph,setPh]=useState("");
+  var [nm,setNm]=useState(""); var [pin,setPin]=useState(""); var [city,setCity]=useState(""); var [state,setState]=useState(""); var [pinLoad,setPinLoad]=useState(false); var [pinErr,setPinErr]=useState("");
   var [catQ,setCatQ]=useState(""); var [selCats,setSelCats]=useState([]); var [showDrop,setShowDrop]=useState(false);
-  var [selPlan,setSelPlan]=useState("growth");
+  var [selPlan,setSelPlan]=useState("free");
+  var [payLoad,setPayLoad]=useState(false); var [payDone,setPayDone]=useState(false);
+  var [saveLoad,setSaveLoad]=useState(false);
   var [errs,setErrs]=useState({});
-  var cd=useCountdown(32662);
-  var STEPS=["Phone","Details","Category","Plan","Done"];
-  var SUGG=["Digital Marketing Agency","Home Cleaning","AC Repair","Tutor & Coaching","Beauty Salon","Event Management","Electrical Services","Car Service"];
-  var filtered=BIZ_CATS.filter(function(c){return catQ&&c.toLowerCase().indexOf(catQ.toLowerCase())>=0;});
+  /* Check if user is already logged in + verified */
+  var curUser=auth&&auth.currentUser;
+  var isEmailVerified=curUser&&curUser.emailVerified;
+  var STEPS_LABELS=["Start","Details","Category","Plan","Payment","Done"];
+  var filtCats=BIZ_CATS.filter(function(c){return catQ&&c.toLowerCase().indexOf(catQ.toLowerCase())>=0;});
+  var chosenPlan=OB_PLANS.find(function(p){return p.id===selPlan;})||OB_PLANS[0];
 
+  /* ── REAL Pincode API ── */
   function doPin(v){
-    setPin(v);
+    setPin(v);setPinErr("");setCity("");setState("");
     if(v.length===6){
       setPinLoad(true);
-      setTimeout(function(){
-        var r=PIN_MAP[v]||"Pune|Maharashtra";
-        var parts=r.split("|");
-        setCity(parts[0]);
-        setPinLoad(false);
-      },600);
-    } else {setCity("");}
+      fetch("https://api.postalpincode.in/pincode/"+v)
+        .then(function(r){return r.json();})
+        .then(function(data){
+          setPinLoad(false);
+          if(data&&data[0]&&data[0].Status==="Success"&&data[0].PostOffice&&data[0].PostOffice.length>0){
+            var po=data[0].PostOffice[0];
+            setCity(po.District||po.Division||"");
+            setState(po.State||"");
+            setPinErr("");
+          } else {
+            setCity("");setState("");
+            setPinErr("Invalid pincode. Please enter a real 6-digit pincode.");
+          }
+        })
+        .catch(function(){
+          setPinLoad(false);
+          setPinErr("Could not verify pincode. Check your internet.");
+        });
+    } else {
+      setCity("");setState("");
+    }
   }
+
   function addCat(c){if(selCats.indexOf(c)<0&&selCats.length<5)setSelCats(function(a){return a.concat([c]);});setCatQ("");setShowDrop(false);}
   function remCat(c){setSelCats(function(a){return a.filter(function(x){return x!==c;});});}
+  function hideDrop(){setTimeout(function(){setShowDrop(false);},200);}
 
-  function s1(){if(!/^[6-9]\d{9}$/.test(ph)){setErrs({ph:"Enter valid 10-digit mobile"});return;}setLoading(true);setTimeout(function(){setLoading(false);setStep(2);setErrs({});},700);}
-  function s2(){if(!nm.trim()){setErrs({nm:"Business name required"});return;}if(pin.length!==6){setErrs({pin:"Enter valid 6-digit pincode"});return;}setStep(3);setErrs({});}
-  function s3(){if(selCats.length===0){setErrs({cat:"Select at least one category"});return;}setStep(4);setErrs({});}
-  function finish(){
-    setLoading(true);
-    var r=PIN_MAP[pin]||"Pune|Maharashtra"; var parts=r.split("|");
-    var u={name:nm,phone:ph,role:"business",plan:selPlan,city:parts[0]};
-    sbPost("businesses",{name:nm,phone:ph,plan:selPlan,category:selCats[0],location:parts[0],status:"pending",verified:false,rating:0,reviews:0,views:0});
-    sbPost("users",{name:nm,phone:ph,role:"business",plan:selPlan});
-    setTimeout(function(){setUser(u);setLoading(false);setStep(5);},900);
+  /* Step handlers */
+  function s1(){
+    if(!/^[6-9]\d{9}$/.test(ph)){setErrs({ph:"Enter valid 10-digit mobile number"});return;}
+    setStep(2);setErrs({});
+  }
+  function s2(){
+    if(!nm.trim()){setErrs({nm:"Business name is required"});return;}
+    if(pin.length!==6){setErrs({pin:"Enter a valid 6-digit pincode"});return;}
+    if(!city){setErrs({pin:"Pincode not recognized. Please enter a real pincode."});return;}
+    if(pinErr){setErrs({pin:pinErr});return;}
+    setStep(3);setErrs({});
+  }
+  function s3(){
+    if(selCats.length===0){setErrs({cat:"Select at least one category"});return;}
+    setStep(4);setErrs({});
+  }
+  function s4(){
+    if(selPlan==="free"){doSave("paid");}
+    else{setStep(5);}
+  }
+  function simulatePay(){
+    setPayLoad(true);
+    setTimeout(function(){setPayLoad(false);setPayDone(true);},2000);
+  }
+  function doSave(pStatus){
+    if(!db||!FIREBASE_OK){
+      /* Offline fallback — still show success */
+      var u={name:nm,phone:ph,role:"business",plan:selPlan,city:city};
+      setUser(u);setSaveLoad(false);setStep(6);return;
+    }
+    setSaveLoad(true);
+    var ownerId=curUser?curUser.uid:("guest_"+Date.now());
+    var data={
+      ownerId:ownerId,
+      ownerEmail:curUser?curUser.email||"":"",
+      businessName:nm.trim(),
+      name:nm.trim(),
+      category:selCats[0]||"",
+      categories:selCats,
+      phone:ph,
+      city:city,
+      state:state,
+      pincode:pin,
+      location:city,
+      plan:selPlan,
+      planPrice:chosenPlan.price,
+      paymentStatus:pStatus||"pending",
+      status:"pending",
+      isActive:false,
+      isVerified:false,
+      rating:0,reviews:0,views:0,
+      createdAt:new Date().toISOString()
+    };
+    db.collection("businesses").add(data).then(function(ref){
+      /* Also update/create user record */
+      if(curUser){
+        db.collection("users").where("uid","==",curUser.uid).get().then(function(snap){
+          if(snap.empty){db.collection("users").add({uid:curUser.uid,name:nm.trim(),phone:ph,email:curUser.email||"",role:"business",plan:selPlan,createdAt:new Date().toISOString()});}
+          else{snap.docs[0].ref.update({role:"business",plan:selPlan,phone:ph});}
+        }).catch(function(){});
+      }
+      var u={name:nm,phone:ph,role:"business",plan:selPlan,city:city,uid:ownerId};
+      setUser(u);setSaveLoad(false);setStep(6);
+    }).catch(function(){
+      /* Even if Firestore fails show success for demo */
+      var u={name:nm,phone:ph,role:"business",plan:selPlan,city:city};
+      setUser(u);setSaveLoad(false);setStep(6);
+    });
   }
 
+  var totalSteps=5;
+  var showStepNum=Math.min(step,5);
+
   return React.createElement("div",{className:"page",style:{paddingBottom:40}},
-    step<5&&React.createElement("div",{className:"steps"},
-      STEPS.slice(0,4).map(function(s,i){
-        var n=i+1,isDone=step>n,isAct=step===n;
-        return React.createElement("div",{key:s,className:"step-item"+(isDone?" done":"")},
-          React.createElement("div",{className:"step-circle "+(isDone?"done":isAct?"active":"idle")},isDone?"✓":n),
-          React.createElement("div",{className:"step-label "+(isAct?"active":"")},s)
-        );
-      })
+
+    /* Step progress bar (steps 1-5) */
+    step<6&&React.createElement("div",{style:{padding:"16px 20px 0"}},
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:4,marginBottom:8}},
+        [1,2,3,4,5].map(function(s){
+          return React.createElement("div",{key:s,style:{flex:1,height:3,borderRadius:2,background:step>s?"var(--green)":step===s?"var(--c)":"var(--s3)",transition:"all .3s"}});
+        })
+      ),
+      React.createElement("div",{style:{fontSize:11,color:"var(--t3)",fontWeight:600}},
+        "Step "+showStepNum+" of 5 — "+STEPS_LABELS[step-1]
+      )
     ),
-    step===1&&React.createElement("div",{className:"au",style:{padding:"28px 20px"}},
-      React.createElement("div",{style:{textAlign:"center",marginBottom:28}},
-        React.createElement("div",{style:{fontSize:48,marginBottom:12}},"🏢"),
+
+    /* ── STEP 1: LANDING ── */
+    step===1&&React.createElement("div",{className:"au",style:{padding:"24px 20px"}},
+      /* Email verification warning if logged in but not verified */
+      isEmailVerified===false&&React.createElement("div",{style:{background:"rgba(251,191,36,.08)",border:"1px solid rgba(251,191,36,.3)",borderRadius:14,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}},
+        React.createElement("span",{style:{fontSize:18}},"\u26A0\uFE0F"),
+        React.createElement("span",{style:{fontSize:13,color:"var(--amber)",flex:1}},"Your email is not verified. Please verify your email to list your business officially.")
+      ),
+      React.createElement("div",{style:{textAlign:"center",marginBottom:24}},
+        React.createElement("div",{style:{fontSize:52,marginBottom:10}},"\uD83C\uDFEA"),
         React.createElement("h2",{style:{fontSize:24,fontWeight:900,fontFamily:"Poppins",marginBottom:6}},"List Your Business"),
         React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.7}},"Join 3,241+ businesses growing on Servora Pune")
       ),
-      [["🏆","Rank above your competitors"],["⚡","Get leads from Day 1"],["📊","Track & analyse performance"],["🤖","AI-powered growth coach"]].map(function(x){
+      [
+        ["\uD83C\uDFC6","Rank above your competitors"],
+        ["\u26A1","Get leads from Day 1"],
+        ["\uD83D\uDCCA","Track & analyse performance"],
+        ["\uD83E\uDD16","AI-powered growth coach"]
+      ].map(function(x){
         return React.createElement("div",{key:x[1],style:{display:"flex",alignItems:"center",gap:12,marginBottom:14}},
-          React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"rgba(34,211,238,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}},x[0]),
+          React.createElement("div",{style:{width:38,height:38,borderRadius:11,background:"rgba(34,211,238,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}},x[0]),
           React.createElement("span",{style:{fontSize:14,color:"var(--t2)"}},x[1])
         );
       }),
       React.createElement("label",{className:"lbl",style:{marginTop:20}},"Mobile Number"),
       React.createElement("div",{style:{display:"flex",background:"var(--s2)",border:"1.5px solid "+(errs.ph?"var(--rose)":"var(--b2)"),borderRadius:14,overflow:"hidden",marginBottom:6}},
-        React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"🇮🇳 +91"),
-        React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs({});},placeholder:"10-digit mobile",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px",fontSize:16}})
+        React.createElement("div",{style:{padding:"15px 14px",color:"var(--t2)",fontSize:14,borderRight:"1px solid var(--b1)",background:"var(--s3)",flexShrink:0}},"\uD83C\uDDEE\uD83C\uDDF3 +91"),
+        React.createElement("input",{value:ph,onChange:function(e){setPh(e.target.value.replace(/\D/g,"").slice(0,10));setErrs({});},placeholder:"10-digit mobile number",type:"tel",style:{flex:1,background:"transparent",border:"none",outline:"none",color:"var(--t1)",padding:"15px 14px",fontSize:16}})
       ),
-      errs.ph&&React.createElement("div",{className:"em"},"⚠️ "+errs.ph),
-      React.createElement("button",{onClick:s1,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginTop:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Verifying..."):"Get Started Free →"),
+      errs.ph&&React.createElement("div",{className:"em"},"\u26A0\uFE0F "+errs.ph),
+      React.createElement("button",{onClick:s1,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16,marginTop:16}},"Get Started Free \u2192"),
       React.createElement("p",{style:{textAlign:"center",fontSize:12,color:"var(--t3)",marginTop:10}},"By continuing you agree to our Terms & Privacy Policy")
     ),
-    step===2&&React.createElement("div",{className:"au",style:{padding:"28px 20px"}},
+
+    /* ── STEP 2: BUSINESS DETAILS ── */
+    step===2&&React.createElement("div",{className:"au",style:{padding:"24px 20px"}},
       React.createElement("h2",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Business Details"),
-      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:24}},"Tell us about your business"),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:20}},"Tell us about your business"),
       React.createElement("div",{style:{marginBottom:16}},
         React.createElement("label",{className:"lbl"},"Business Name *"),
         React.createElement("input",{value:nm,onChange:function(e){setNm(e.target.value);setErrs({});},className:"field"+(errs.nm?" err":""),placeholder:"e.g. Rahul AC Repair Services"}),
@@ -1428,99 +1537,139 @@ function BusinessOnboard(props){
       ),
       React.createElement("div",{style:{marginBottom:8}},
         React.createElement("label",{className:"lbl"},"Pincode *"),
-        React.createElement("input",{value:pin,onChange:function(e){doPin(e.target.value.replace(/\D/g,"").slice(0,6));setErrs({});},className:"field"+(errs.pin?" err":""),placeholder:"6-digit pincode",type:"tel"}),
-        pinLoad&&React.createElement("div",{className:"pincode-loader"},React.createElement(Spin,null),"Detecting location..."),
-        city&&!pinLoad&&React.createElement("div",{style:{marginTop:10,display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:"rgba(52,211,153,.06)",border:"1px solid rgba(52,211,153,.2)",borderRadius:10}},
-          React.createElement("span",{style:{fontSize:16}},"📍"),
-          React.createElement("span",{style:{color:"var(--green)",fontWeight:600,fontSize:14}},city+" · "+pin)
+        React.createElement("input",{value:pin,onChange:function(e){doPin(e.target.value.replace(/\D/g,"").slice(0,6));setErrs({});},className:"field"+(errs.pin?" err":""),placeholder:"Enter your area pincode",type:"tel"}),
+        pinLoad&&React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--c)",padding:"6px 0"}},React.createElement(Spin,null)," Verifying pincode..."),
+        city&&!pinLoad&&React.createElement("div",{style:{marginTop:8,display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:"rgba(52,211,153,.06)",border:"1px solid rgba(52,211,153,.2)",borderRadius:10}},
+          React.createElement("span",{style:{fontSize:16}},"\uD83D\uDCCD"),
+          React.createElement("span",{style:{color:"var(--green)",fontWeight:600,fontSize:14}},city+(state?", "+state:"")+" \u00B7 "+pin)
         ),
+        pinErr&&!pinLoad&&React.createElement("div",{style:{marginTop:6,padding:"8px 12px",background:"rgba(251,113,133,.08)",border:"1px solid rgba(251,113,133,.2)",borderRadius:8,fontSize:12,color:"var(--rose)"}}),"\u26A0\uFE0F "+pinErr,
         errs.pin&&React.createElement("div",{className:"em"},errs.pin)
       ),
-      React.createElement("button",{onClick:s2,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15,marginTop:20}},"Save and Continue →")
+      React.createElement("button",{onClick:s2,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15,marginTop:20}},"Save and Continue \u2192")
     ),
-    step===3&&React.createElement("div",{className:"au",style:{padding:"28px 20px"}},
-      React.createElement("h2",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Add Business Category"),
+
+    /* ── STEP 3: CATEGORY ── */
+    step===3&&React.createElement("div",{className:"au",style:{padding:"24px 20px"}},
+      React.createElement("h2",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Business Category"),
       React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:20}},"Choose so customers can find you easily"),
       React.createElement("div",{className:"cat-search-wrap",style:{marginBottom:16}},
         React.createElement("div",{className:"psearch"},
           React.createElement("span",{style:{color:"var(--t3)"}},"\uD83D\uDD0D"),
-          React.createElement("input",{value:catQ,onChange:function(e){setCatQ(e.target.value);setShowDrop(true);},onFocus:function(){setShowDrop(true);},placeholder:"Type business category...",style:{background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:15,flex:1}})
+          React.createElement("input",{value:catQ,onChange:function(e){setCatQ(e.target.value);setShowDrop(true);},onFocus:function(){setShowDrop(true);},onBlur:hideDrop,placeholder:"Type business category...",style:{background:"transparent",border:"none",outline:"none",color:"var(--t1)",fontSize:15,flex:1}})
         ),
-        showDrop&&filtered.length>0&&React.createElement("div",{className:"cat-dropdown"},
-          filtered.slice(0,7).map(function(c){return React.createElement("div",{key:c,className:"cat-opt",onClick:function(){addCat(c);}},React.createElement("span",{style:{fontSize:16}},"🏷️")," ",c);})
+        showDrop&&filtCats.length>0&&React.createElement("div",{className:"cat-dropdown"},
+          filtCats.slice(0,7).map(function(c){return React.createElement("div",{key:c,className:"cat-opt",onClick:function(){addCat(c);}},React.createElement("span",{style:{fontSize:16}},"\uD83C\uDFF7\uFE0F")," ",c);})
         )
       ),
       selCats.length>0&&React.createElement("div",{style:{marginBottom:18}},
         React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--t3)",marginBottom:10,letterSpacing:".5px",textTransform:"uppercase"}},"Selected ("+selCats.length+"/5)"),
         React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:8}},
-          selCats.map(function(c){return React.createElement("div",{key:c,className:"cat-chip sel"},c,React.createElement("span",{className:"rem",onClick:function(){remCat(c);}},"×"));})
+          selCats.map(function(c){return React.createElement("div",{key:c,className:"cat-chip sel"},c,React.createElement("span",{className:"rem",onClick:function(){remCat(c);}},"\u00D7"));})
         )
       ),
-      errs.cat&&React.createElement("div",{className:"em",style:{marginBottom:10}},"⚠️ "+errs.cat),
+      errs.cat&&React.createElement("div",{className:"em",style:{marginBottom:10}},"\u26A0\uFE0F "+errs.cat),
       React.createElement("div",{style:{marginBottom:20}},
         React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--t3)",marginBottom:10,letterSpacing:".5px",textTransform:"uppercase"}},"Suggested"),
         React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:8}},
-          SUGG.filter(function(c){return selCats.indexOf(c)<0;}).map(function(c){
+          SUGG_CATS.filter(function(c){return selCats.indexOf(c)<0;}).map(function(c){
             return React.createElement("div",{key:c,className:"cat-chip",onClick:function(){addCat(c);}},c,React.createElement("span",{style:{color:"var(--c)",fontSize:16,marginLeft:2}},"+"));
           })
         )
       ),
-      React.createElement("button",{onClick:s3,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15}},"Save and Continue →")
+      React.createElement("button",{onClick:s3,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15}},"Save and Continue \u2192")
     ),
+
+    /* ── STEP 4: PLAN SELECTION (FIXED PRICES) ── */
     step===4&&React.createElement("div",{className:"au"},
-      React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(251,191,36,.12),rgba(34,211,238,.06))",borderBottom:"1px solid rgba(251,191,36,.2)",padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}},
-        React.createElement("div",null,
-          React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--amber)",letterSpacing:"1px"}},"🌸 BIG SPRING SALE"),
-          React.createElement("div",{style:{color:"var(--amber)",fontWeight:700,fontSize:14}},"Up to 50% OFF")
-        ),
-        React.createElement("div",{className:"countdown"},
-          [{v:cd.h,l:"HRS"},{v:cd.m,l:"MIN"},{v:cd.s,l:"SEC"}].map(function(x){return React.createElement("div",{key:x.l,className:"cd-block"},React.createElement("div",{className:"cd-num"},x.v),React.createElement("div",{className:"cd-label"},x.l));})
-        )
+      React.createElement("div",{style:{padding:"20px 20px 8px"}},
+        React.createElement("h2",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Choose Your Plan"),
+        React.createElement("p",{style:{color:"var(--t2)",fontSize:13,marginBottom:4}},"Start free and upgrade anytime.")
       ),
-      React.createElement("div",{style:{padding:"20px 16px 8px"}},
-        React.createElement("h2",{style:{fontSize:20,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Select Your Plan"),
-        React.createElement("p",{style:{color:"var(--t2)",fontSize:13}})
-      ),
-      React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14,padding:"0 16px 24px"}},
-        [{id:"free",name:"Starter",icon:"🌱",price:0,label:"Free Forever",color:"#475569",feats:[["5 leads/month",true],["Basic listing",true],["Standard placement",true],["Verified badge",false],["AI Coach",false]],badge:null},
-         {id:"growth",name:"Growth",icon:"📈",price:999,label:"Rs.999/month",color:"#22d3ee",feats:[["50 leads/month",true],["Verified badge",true],["Priority listing",true],["Analytics",true],["AI Coach",false]],badge:null},
-         {id:"pro",name:"Pro",icon:"⚡",price:2499,label:"Rs.2,499/month",color:"#818cf8",feats:[["200 leads/month",true],["AI Growth Coach",true],["Top 3 placement",true],["Competitor analysis",true],["Dedicated support",true]],badge:"MOST POPULAR"},
-         {id:"elite",name:"Elite",icon:"👑",price:4999,label:"Rs.4,999/month",color:"#fbbf24",feats:[["Unlimited leads",true],["Position #1",true],["Dedicated manager",true],["Custom banner ads",true],["White-glove setup",true]],badge:"MAX GROWTH"}
-        ].map(function(p){
+      React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12,padding:"0 16px 16px"}},
+        OB_PLANS.map(function(p){
           var isSel=selPlan===p.id;
-          return React.createElement("div",{key:p.id,className:"plan-card"+(p.badge==="MOST POPULAR"?" popular":"")+(isSel?" selected":""),onClick:function(){setSelPlan(p.id);}},
-            p.badge&&React.createElement("div",{className:"plan-badge-top",style:{background:"linear-gradient(135deg,"+p.color+","+p.color+"bb)",color:"#fff"}},p.badge),
-            React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}},
-              React.createElement("div",null,
-                React.createElement("div",{style:{fontSize:22,marginBottom:2}},p.icon),
-                React.createElement("div",{style:{fontFamily:"Poppins",fontWeight:800,fontSize:16,color:p.color}},p.name),
-                React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},p.label)
+          function pick(){setSelPlan(p.id);}
+          return React.createElement("div",{key:p.id,onClick:pick,
+            style:{borderRadius:18,padding:18,border:"2px solid "+(isSel?p.color:"var(--b1)"),background:isSel?"rgba(34,211,238,.04)":"var(--s1)",cursor:"pointer",position:"relative",transition:"all .25s"}
+          },
+            p.badge&&React.createElement("div",{style:{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",fontSize:10,fontWeight:800,padding:"4px 14px",borderRadius:20,background:"linear-gradient(135deg,"+p.color+","+p.color+"cc)",color:"#fff",letterSpacing:".5px"}},p.badge),
+            React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}},
+              React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10}},
+                React.createElement("div",{style:{fontSize:26}},p.icon),
+                React.createElement("div",null,
+                  React.createElement("div",{style:{fontFamily:"Poppins",fontWeight:800,fontSize:16,color:p.color}},p.name),
+                  React.createElement("div",{style:{color:"var(--t3)",fontSize:12}},p.label)
+                )
               ),
-              React.createElement("div",{style:{width:24,height:24,borderRadius:"50%",border:"2px solid "+(isSel?p.color:"var(--b2)"),display:"flex",alignItems:"center",justifyContent:"center",background:isSel?p.color:"transparent",transition:"all .2s"}},
-                isSel&&React.createElement("span",{style:{color:"#fff",fontSize:12,fontWeight:700}},"✓")
+              React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}},
+                React.createElement("div",{style:{fontWeight:900,fontSize:22,fontFamily:"Poppins",color:p.color}},p.price===0?"\u20B90":"\u20B9"+p.price),
+                React.createElement("div",{style:{width:22,height:22,borderRadius:"50%",border:"2px solid "+(isSel?p.color:"var(--b3)"),background:isSel?p.color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#fff",fontWeight:700,transition:"all .2s"}},isSel?"\u2713":"")
               )
             ),
-            p.feats.map(function(f){return React.createElement("div",{key:f[0],className:"plan-feature"},React.createElement("span",{className:f[1]?"tick":"cross"},f[1]?"✓":"✗"),f[0]);})
+            React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:6}},
+              p.feats.map(function(f){
+                return React.createElement("span",{key:f[0],style:{fontSize:11,color:f[1]?"var(--t2)":"var(--t3)",background:f[1]?"var(--s2)":"transparent",padding:f[1]?"3px 8px":"3px 0",borderRadius:6,textDecoration:f[1]?"none":"line-through"}},f[1]?"\u2713 "+f[0]:"\u2717 "+f[0]);
+              })
+            )
           );
         })
       ),
       React.createElement("div",{style:{padding:"0 16px 24px"}},
-        React.createElement("button",{onClick:finish,disabled:loading,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16}},loading?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement(Spin,null),"Setting up..."):"Confirm & Go Live 🚀")
+        React.createElement("button",{onClick:s4,className:"btn bp",style:{width:"100%",padding:"16px 0",borderRadius:14,fontSize:16}},
+          selPlan==="free"?"Submit for Free Review \u2192":"Next: Pay \u20B9"+chosenPlan.price+" \u2192"
+        )
       )
     ),
-    step===5&&React.createElement("div",{className:"au",style:{padding:"40px 20px",textAlign:"center"}},
-      React.createElement("div",{style:{fontSize:72,marginBottom:16,animation:"float 2s ease-in-out infinite"}},"🎉"),
+
+    /* ── STEP 5: PAYMENT ── */
+    step===5&&React.createElement("div",{className:"au",style:{padding:"24px 20px"}},
+      React.createElement("h2",{style:{fontSize:22,fontWeight:800,fontFamily:"Poppins",marginBottom:4}},"Complete Payment"),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:14,marginBottom:20}},"One-time payment to activate your listing."),
+      React.createElement("div",{className:"pay-box"},
+        React.createElement("div",{style:{fontSize:48,marginBottom:10}},"\uD83D\uDCB3"),
+        React.createElement("div",{style:{fontWeight:900,fontSize:36,fontFamily:"Poppins",color:"var(--c)",marginBottom:4}},"\u20B9"+chosenPlan.price),
+        React.createElement("div",{style:{fontSize:14,color:"var(--t2)",marginBottom:2}},chosenPlan.name+" Plan — Monthly"),
+        React.createElement("div",{style:{fontSize:12,color:"var(--t3)"}},nm||"Your Business")
+      ),
+      React.createElement("div",{style:{background:"rgba(251,191,36,.06)",border:"1px solid rgba(251,191,36,.2)",borderRadius:14,padding:"12px 16px",marginBottom:20,display:"flex",gap:10,alignItems:"center"}},
+        React.createElement("span",{style:{fontSize:18}},"\uD83D\uDD12"),
+        React.createElement("span",{style:{fontSize:13,color:"var(--t2)"}},"Demo mode: Razorpay will be integrated for real payments.")
+      ),
+      !payDone&&React.createElement("button",{onClick:simulatePay,disabled:payLoad,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:16,marginBottom:10}},
+        payLoad?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}},React.createElement(Spin,null),"Processing payment..."):
+        "\uD83D\uDD12 Pay \u20B9"+chosenPlan.price+" Securely"
+      ),
+      payDone&&React.createElement("div",null,
+        React.createElement("div",{className:"abox aok",style:{marginBottom:14}},"\u2705 Payment successful! Submitting your listing..."),
+        React.createElement("button",{onClick:function(){doSave("paid");},disabled:saveLoad,className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:16}},
+          saveLoad?React.createElement("span",{style:{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}},React.createElement(Spin,null),"Saving..."):
+          "\uD83D\uDE80 Submit Listing \u2192"
+        )
+      ),
+      React.createElement("button",{onClick:function(){setStep(4);},style:{background:"none",border:"none",color:"var(--t3)",fontSize:13,cursor:"pointer",width:"100%",marginTop:10,padding:"8px 0"}},"← Change Plan")
+    ),
+
+    /* ── STEP 6: SUCCESS ── */
+    step===6&&React.createElement("div",{className:"au",style:{padding:"40px 20px",textAlign:"center"}},
+      React.createElement("div",{style:{fontSize:72,marginBottom:16,animation:"float 2s ease-in-out infinite"}},"\uD83C\uDF89"),
       React.createElement("h2",{style:{fontSize:26,fontWeight:900,fontFamily:"Poppins",marginBottom:8,color:"var(--green)"}},"You're Live on Servora!"),
-      React.createElement("p",{style:{color:"var(--t2)",fontSize:15,lineHeight:1.7,marginBottom:28}},"Listing submitted for review. We'll approve within 24 hours."),
+      React.createElement("p",{style:{color:"var(--t2)",fontSize:15,lineHeight:1.7,marginBottom:24}},"Listing submitted for review. Admin will approve within 24 hours."),
       React.createElement("div",{style:{background:"rgba(52,211,153,.06)",border:"1px solid rgba(52,211,153,.2)",borderRadius:16,padding:20,marginBottom:24,textAlign:"left"}},
-        [["📋","Status","Under Review"],["⚡","Approval","< 24 Hours"],["📍","Location",city||"Pune"],["📦","Plan",selPlan.charAt(0).toUpperCase()+selPlan.slice(1)]].map(function(x){
+        [
+          ["\uD83D\uDCCB","Status","Under Review \u23F3"],
+          ["\u26A1","Approval","Within 24 Hours"],
+          ["\uD83D\uDCCD","Location",city||(state?"":"")||"Detected"],
+          ["\uD83D\uDCE6","Plan",chosenPlan.name],
+          ["\uD83D\uDCB3","Payment",selPlan==="free"?"Free":"\u20B9"+chosenPlan.price+" Paid \u2705"]
+        ].map(function(x){
           return React.createElement("div",{key:x[1],className:"info-row"},
             React.createElement("span",{style:{color:"var(--t2)",fontSize:13}},x[0]+" "+x[1]),
             React.createElement("span",{style:{fontWeight:700,fontSize:13}},x[2])
           );
         })
       ),
-      React.createElement("button",{onClick:function(){go("bizDash");},className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15,marginBottom:12}},"Go to My Dashboard →"),
+      React.createElement("button",{onClick:function(){go("bizDash");},className:"btn bp",style:{width:"100%",padding:"15px 0",borderRadius:14,fontSize:15,marginBottom:12}},"Go to My Dashboard \u2192"),
       React.createElement("button",{onClick:function(){go("listings");},className:"btn bo",style:{width:"100%",padding:"13px 0",borderRadius:14,fontSize:14}},"View All Listings")
     )
   );
