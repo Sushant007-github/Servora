@@ -1048,7 +1048,7 @@ function SignupFlow(props){
       fireUser.updateProfile({displayName:nm.trim()}).catch(function(){});
       var isAdminEmail=em.trim().toLowerCase()==="admin@servora.in";
       var userRole=isAdminEmail?"admin":role;
-      sbPost("users",{uid:fireUser.uid,name:nm.trim(),email:em.trim().toLowerCase(),phone:"",role:userRole,emailVerified:false});
+      sbPost("users",{uid:fireUser.uid,name:nm.trim(),email:em.trim().toLowerCase(),phone:"",role:userRole,emailVerified:false,onboardingCompleted:false});
       auth.signOut();
       setLoading(false);
       setDone(true);
@@ -1191,10 +1191,13 @@ function LoginFlow(props){
         var ex=users&&users.length>0?users[0]:null;
         var isAdmin=fireUser.email==="admin@servora.in";
         var role=isAdmin?"admin":(ex?ex.role:"user");
-        var u={uid:fireUser.uid,name:fireUser.displayName||ex&&ex.name||"",email:fireUser.email||"",role:role,id:ex?ex.id:""};
-        if(!ex){sbPost("users",{uid:fireUser.uid,name:u.name,email:u.email,phone:"",role:role,emailVerified:true});}
+        var obDone=isAdmin?true:(ex?ex.onboardingCompleted===true:false);
+        var u={uid:fireUser.uid,name:fireUser.displayName||ex&&ex.name||"",email:fireUser.email||"",role:role,id:ex?ex.id:"",onboardingCompleted:obDone};
+        if(!ex){sbPost("users",{uid:fireUser.uid,name:u.name,email:u.email,phone:"",role:role,emailVerified:true,onboardingCompleted:false});}
         props.setUser(u);setLoading(false);
-        if(role==="admin")props.go("admin");else if(role==="business")props.go("bizDash");else props.go("dash");
+        if(role==="admin")props.go("admin");
+        else if(role==="business"){if(obDone)props.go("bizDash");else props.go("biz-onboard");}
+        else props.go("dash");
       }).catch(function(){
         var u={uid:fireUser.uid,name:fireUser.displayName||"",email:fireUser.email||"",role:"user"};
         props.setUser(u);setLoading(false);props.go("dash");
@@ -1518,7 +1521,12 @@ function BusinessOnboard(props){
     db.collection("businesses").add(data).then(function(){
       if(curUser){
         db.collection("users").where("uid","==",curUser.uid).get().then(function(snap){
-          if(!snap.empty)snap.docs[0].ref.update({role:"business",plan:selPlan,phone:ph||""});
+          if(!snap.empty){
+            var obVal=selPlan==="free"?true:false;
+            snap.docs[0].ref.update({role:"business",plan:selPlan,phone:ph||"",onboardingCompleted:obVal});
+            /* Update local user state so routing reflects immediately */
+            if(setUser){setUser(function(prev){return prev?Object.assign({},prev,{role:"business",onboardingCompleted:obVal}):prev;});}
+          }
         }).catch(function(){});
       }
       setSaveLoad(false);setStep(5);
@@ -2377,27 +2385,38 @@ function BizDash(props){
   var user=props.user;
   var [tab,setTab]=useState("overview");
   var [biz,setBiz]=useState(null);
+  var [bizLoad,setBizLoad]=useState(true);
   var [leads,setLeads]=useState([]);
   var [aiTip,setAiTip]=useState(""); var [aiLoad,setAiLoad]=useState(false);
-  var MOCK=[
-    {id:"l1",customer_name:"Rahul Sharma",customer_phone:"9876543210",message:"Deep cleaning for 2BHK in Koregaon Park",status:"new",created_at:new Date(Date.now()-7200000).toISOString()},
-    {id:"l2",customer_name:"Sneha Patil",customer_phone:"9765432109",message:"Monthly cleaning service required",status:"contacted",created_at:new Date(Date.now()-86400000).toISOString()},
-    {id:"l3",customer_name:"Amit Kumar",customer_phone:"9654321098",message:"Office cleaning in Hinjewadi",status:"new",created_at:new Date(Date.now()-172800000).toISOString()}
-  ];
+  /* ── Fetch real biz + leads from Firestore only ── */
   useEffect(function(){
-    if(!user||!user.id)return;
-    sbGet("businesses","?owner_id=eq."+user.id+"&limit=1").then(function(d){
-      if(d&&d.length>0){setBiz(d[0]);sbGet("leads","?business_id=eq."+d[0].id+"&order=created_at.desc").then(function(l){if(l&&l.length>0)setLeads(l);else setLeads(MOCK);});}
-      else setLeads(MOCK);
-    }).catch(function(){setLeads(MOCK);});
+    if(!db||!FIREBASE_OK||!user){setBizLoad(false);return;}
+    var uid=user.uid||user.id||"";
+    if(!uid){setBizLoad(false);return;}
+    db.collection("businesses").where("ownerId","==",uid).limit(1).get()
+      .then(function(snap){
+        if(!snap.empty){
+          var bizDoc=Object.assign({id:snap.docs[0].id},snap.docs[0].data());
+          setBiz(bizDoc);
+          /* Fetch real leads for this business */
+          db.collection("leads").where("business_id","==",bizDoc.id).orderBy("created_at","desc").limit(50).get()
+            .then(function(ls){
+              var realLeads=ls.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+              setLeads(realLeads);
+              setBizLoad(false);
+            }).catch(function(){setBizLoad(false);});
+        } else {
+          setBizLoad(false);
+        }
+      }).catch(function(){setBizLoad(false);});
   }, []);
   function doAI(){setAiLoad(true);callAI("Growth advisor for Indian local businesses. 3 numbered tips for more leads. Under 90 words.",(biz?biz.name:"my business")+" Pune").then(function(r){setAiTip(r);setAiLoad(false);});}
   function markC(id){setLeads(function(l){return l.map(function(x){return x.id===id?Object.assign({},x,{status:"contacted"}):x;});});}
-  var disp=leads.length>0?leads:MOCK;
-  var newL=disp.filter(function(l){return l.status==="new";}).length;
-  var VIEWS=[24,38,19,52,41,67,44]; var maxV=Math.max.apply(null,VIEWS);
-  var DAYS=["M","T","W","T","F","S","S"];
-  var TABS=[{id:"overview",icon:"📊",label:"Overview"},{id:"leads",icon:"⚡",label:"Leads",count:newL},{id:"analytics",icon:"📈",label:"Stats"},{id:"ai",icon:"🤖",label:"AI"},{id:"profile",icon:"🏢",label:"Profile"},{id:"plans",icon:"⬆️",label:"Plans"}];
+  var newL=leads.filter(function(l){return l.status==="new";}).length;
+  var TABS=[{id:"overview",icon:"📊",label:"Overview"},{id:"leads",icon:"⚡",label:"Leads",count:newL},{id:"ai",icon:"🤖",label:"AI"},{id:"profile",icon:"🏢",label:"Profile"},{id:"plans",icon:"⬆️",label:"Plans"}];
+  if(bizLoad){return React.createElement("div",{className:"page",style:{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"60vh"}},React.createElement("div",{style:{textAlign:"center"}},React.createElement("div",{className:"spinner",style:{width:32,height:32,margin:"0 auto 12px"}}),React.createElement("div",{style:{color:"var(--t3)",fontSize:13,fontWeight:600}},"Loading your dashboard...")));}
+  if(!biz){return React.createElement("div",{className:"page",style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"70vh",padding:"40px 20px",textAlign:"center"}},React.createElement("div",{style:{fontSize:64,marginBottom:16}},"🏢"),React.createElement("h3",{style:{fontWeight:800,fontSize:20,fontFamily:"Poppins",marginBottom:8,color:"var(--amber)"}},"No Business Found"),React.createElement("p",{style:{color:"var(--t2)",fontSize:14,lineHeight:1.75,marginBottom:28,maxWidth:320}},"No business found. Complete onboarding first to set up your listing."),React.createElement("button",{onClick:function(){props.go("biz-onboard");},className:"btn bp",style:{padding:"14px 28px",borderRadius:14,fontSize:15}},"🏗️ Start Onboarding →"));}
+
   return React.createElement("div",{className:"page"},
     React.createElement("div",{style:{background:"linear-gradient(135deg,rgba(129,140,248,.08),rgba(34,211,238,.04))",borderBottom:"1px solid var(--b1)",padding:"20px 20px 16px"}},
       React.createElement("div",{style:{display:"flex",gap:12,alignItems:"center",marginBottom:16}},
@@ -2415,7 +2434,7 @@ function BizDash(props){
         )
       ),
       React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}},
-        [{l:"Leads",v:disp.length,c:"#22d3ee"},{l:"Views",v:285,c:"#818cf8"},{l:"Rating",v:biz?biz.rating||"4.7":"4.7",c:"#fbbf24"},{l:"Calls",v:42,c:"#34d399"}].map(function(s){
+        [{l:"Leads",v:leads.length,c:"#22d3ee"},{l:"Views",v:biz?biz.views||0:0,c:"#818cf8"},{l:"Rating",v:biz&&biz.rating?biz.rating:"—",c:"#fbbf24"},{l:"Reviews",v:biz&&biz.reviews?biz.reviews:0,c:"#34d399"}].map(function(s){
           return React.createElement("div",{key:s.l,style:{background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"1px solid var(--b1)"}},
             React.createElement("div",{style:{fontWeight:900,fontSize:16,color:s.c,fontFamily:"Poppins"}},s.v),
             React.createElement("div",{style:{fontSize:10,color:"var(--t3)"}},s.l)
@@ -2453,7 +2472,13 @@ function BizDash(props){
           )
         ),
         React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:10}},"Recent Leads"),
-        disp.slice(0,3).map(function(l){
+        leads.length===0?
+          React.createElement("div",{style:{textAlign:"center",padding:"28px 16px",background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16}},
+            React.createElement("div",{style:{fontSize:40,marginBottom:8}},"⚡"),
+            React.createElement("div",{style:{fontWeight:600,fontSize:14,marginBottom:4}},"No Leads Yet"),
+            React.createElement("p",{style:{color:"var(--t3)",fontSize:12}},"Leads will appear here once customers enquire.")
+          ):
+        leads.slice(0,3).map(function(l){
           return React.createElement("div",{key:l.id,className:"lead-card",style:{marginBottom:10}},
             React.createElement("div",{style:{display:"flex",gap:10,marginBottom:10}},
               React.createElement("div",{style:{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#22d3ee22,#818cf822)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}},l.customer_name&&l.customer_name[0]||"?"),
@@ -2473,7 +2498,7 @@ function BizDash(props){
       ),
       tab==="leads"&&React.createElement("div",null,
         React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}},
-          [["⚡",disp.length,"Total","#22d3ee"],["🆕",newL,"New","#818cf8"],["✅",disp.length-newL,"Done","#34d399"]].map(function(x){
+          [["⚡",leads.length,"Total","#22d3ee"],["🆕",newL,"New","#818cf8"],["✅",Math.max(0,leads.length-newL),"Done","#34d399"]].map(function(x){
             return React.createElement("div",{key:x[2],style:{padding:"14px 8px",background:x[3]+"08",border:"1px solid "+x[3]+"25",borderRadius:14,textAlign:"center"}},
               React.createElement("div",{style:{fontSize:16}},x[0]),
               React.createElement("div",{style:{fontWeight:800,fontSize:20,color:x[3]}},x[1]),
@@ -2481,7 +2506,8 @@ function BizDash(props){
             );
           })
         ),
-        disp.map(function(l){
+        leads.length===0?React.createElement("div",{style:{textAlign:"center",padding:"40px 20px",background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16}},React.createElement("div",{style:{fontSize:48,marginBottom:12}},"⚡"),React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:6}},"No Leads Yet"),React.createElement("p",{style:{color:"var(--t3)",fontSize:13}},"Leads will appear here once customers contact you.")):
+        leads.map(function(l){
           return React.createElement("div",{key:l.id,className:"lead-card",style:{marginBottom:10}},
             React.createElement("div",{style:{display:"flex",gap:10,marginBottom:10}},
               React.createElement("div",{style:{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#22d3ee22,#818cf822)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16}},l.customer_name&&l.customer_name[0]||"?"),
@@ -2501,39 +2527,18 @@ function BizDash(props){
         })
       ),
       tab==="analytics"&&React.createElement("div",null,
-        React.createElement("div",{style:{background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16,padding:"16px 12px",marginBottom:16}},
-          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"📊 Views This Week"),
-          React.createElement("div",{className:"bar-chart"},
-            VIEWS.map(function(v,i){
-              return React.createElement("div",{key:i,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}},
-                React.createElement("div",{style:{width:"100%",height:(v/maxV*44)+"px",background:"linear-gradient(to top,var(--vd),var(--c))",borderRadius:"4px 4px 0 0"}}),
-                React.createElement("div",{style:{fontSize:9,color:"var(--t3)"}},DAYS[i])
-              );
-            })
-          )
-        ),
         React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}},
-          [{l:"Profile Views",v:"285",t:"+23% ↑",up:true,c:"#22d3ee"},{l:"WhatsApp Taps",v:"48",t:"+12% ↑",up:true,c:"#34d399"},{l:"Calls Received",v:"31",t:"-5% ↓",up:false,c:"#fbbf24"},{l:"Quotes Sent",v:"17",t:"+31% ↑",up:true,c:"#818cf8"}].map(function(s){
+          [{l:"Profile Views",v:biz&&biz.views||0,c:"#22d3ee"},{l:"WhatsApp Taps",v:biz&&biz.whatsappTaps||0,c:"#34d399"},{l:"Rating",v:biz&&biz.rating||"—",c:"#fbbf24"},{l:"Reviews",v:biz&&biz.reviews||0,c:"#818cf8"}].map(function(s){
             return React.createElement("div",{key:s.l,className:"stat-big"},
               React.createElement("div",{style:{color:"var(--t3)",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}},s.l),
-              React.createElement("div",{style:{fontWeight:900,fontSize:28,color:s.c,fontFamily:"Poppins",lineHeight:1,animation:"countUp .5s ease"}},s.v),
-              React.createElement("div",{className:"stat-trend "+(s.up?"up":"down")},s.t)
+              React.createElement("div",{style:{fontWeight:900,fontSize:28,color:s.c,fontFamily:"Poppins",lineHeight:1}},s.v)
             );
           })
         ),
-        React.createElement("div",{style:{background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16,padding:16}},
-          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:12}},"Lead Sources"),
-          [["WhatsApp",65,"#34d399"],["Direct Call",20,"#22d3ee"],["Quote Form",15,"#818cf8"]].map(function(x){
-            return React.createElement("div",{key:x[0],style:{marginBottom:12}},
-              React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:4}},
-                React.createElement("span",{style:{fontSize:13,color:"var(--t2)"}},x[0]),
-                React.createElement("span",{style:{fontSize:13,fontWeight:700,color:x[2]}},x[1]+"%")
-              ),
-              React.createElement("div",{style:{height:5,background:"var(--s3)",borderRadius:3}},
-                React.createElement("div",{style:{height:"100%",width:x[1]+"%",background:x[2],borderRadius:3}})
-              )
-            );
-          })
+        React.createElement("div",{style:{textAlign:"center",padding:"30px 20px",background:"var(--s1)",border:"1px solid var(--b1)",borderRadius:16}},
+          React.createElement("div",{style:{fontSize:40,marginBottom:10}},"📊"),
+          React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:6}},"Detailed Analytics Coming Soon"),
+          React.createElement("p",{style:{color:"var(--t3)",fontSize:13}},"Views, taps and call data will appear here as your listing gets traffic.")
         )
       ),
       tab==="ai"&&React.createElement("div",null,
@@ -2622,6 +2627,9 @@ function AdminPanel(){
   }, []);
   function approve(id){
     sbUpdate("businesses",id,{status:"approved",isActive:true,isVerified:true});
+    /* Find business owner and mark onboarding complete */
+    var b=bizList.find(function(x){return x.id===id;});
+    if(b&&b.ownerId&&db){db.collection("users").where("uid","==",b.ownerId).get().then(function(snap){if(!snap.empty)snap.docs[0].ref.update({onboardingCompleted:true,isActive:true,status:"approved"});}).catch(function(){});}
     setBizList(function(l){return l.map(function(b){return b.id===id?Object.assign({},b,{status:"approved",isActive:true,isVerified:true}):b;});});
   }
   function reject(id){
@@ -2700,6 +2708,8 @@ function AdminPanel(){
         pendingPay.map(function(b){
           function approvePay(){
             sbUpdate("businesses",b.id,{paymentStatus:"paid",status:"approved",isActive:true,approvedAt:new Date().toISOString()});
+            /* Update user's onboarding status */
+            if(b.ownerId&&db){db.collection("users").where("uid","==",b.ownerId).get().then(function(snap){if(!snap.empty)snap.docs[0].ref.update({onboardingCompleted:true,isActive:true,status:"approved"});}).catch(function(){});}
             setBizList(function(l){return l.map(function(x){return x.id===b.id?Object.assign({},x,{paymentStatus:"paid",status:"approved",isActive:true}):x;});});
           }
           function rejectPay(){
@@ -2899,8 +2909,8 @@ function App(){
   function go(p){
     if(p==="chat"){setChatOpen(true);return;}
     if(p==="biz-onboard"){setPage("biz-onboard");window.scrollTo({top:0,behavior:"smooth"});return;}
-    if(p==="dashboard"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business")setPage("bizDash");else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
-    if(p==="account"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business")setPage("bizDash");else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
+    if(p==="dashboard"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business"){if(user.onboardingCompleted!==true){setPage("biz-onboard");window.scrollTo({top:0,behavior:"smooth"});return;}setPage("bizDash");}else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
+    if(p==="account"){if(!user){setPage("login");return;}if(user.role==="admin")setPage("admin");else if(user.role==="business"){if(user.onboardingCompleted!==true){setPage("biz-onboard");window.scrollTo({top:0,behavior:"smooth"});return;}setPage("bizDash");}else setPage("dash");window.scrollTo({top:0,behavior:"smooth"});return;}
     setPage(p);window.scrollTo({top:0,behavior:"smooth"});
   }
   /* Session persistence via onAuthStateChanged */
@@ -2913,7 +2923,8 @@ function App(){
           var ex=users&&users.length>0?users[0]:null;
           var isAdmin=fireUser.email==="admin@servora.in";
           var role=isAdmin?"admin":(ex?ex.role:"user");
-          setUser({uid:fireUser.uid,name:fireUser.displayName||ex&&ex.name||"",email:fireUser.email||"",photo:fireUser.photoURL||"",role:role,id:ex?ex.id:""});
+          var obDone=isAdmin?true:(ex?ex.onboardingCompleted===true:false);
+          setUser({uid:fireUser.uid,name:fireUser.displayName||ex&&ex.name||"",email:fireUser.email||"",photo:fireUser.photoURL||"",role:role,id:ex?ex.id:"",onboardingCompleted:obDone});
           setAuthReady(true);
         }).catch(function(){
           setUser({uid:fireUser.uid,name:fireUser.displayName||"",email:fireUser.email||"",role:"user"});
@@ -2941,7 +2952,7 @@ function App(){
     if(page==="login")       return React.createElement(AuthPage,       {setUser:setUser,go:go});
     if(page==="biz-onboard") return React.createElement(BusinessOnboard,{setUser:setUser,go:go,user:user});
     if(page==="dash")        return user?React.createElement(UserDash,  {user:user,go:go}):React.createElement(AuthPage,{setUser:setUser,go:go});
-    if(page==="bizDash")     return user?React.createElement(BizDash,   {user:user,go:go}):React.createElement(AuthPage,{setUser:setUser,go:go});
+    if(page==="bizDash")     return user?(user.onboardingCompleted===true?React.createElement(BizDash,{user:user,go:go}):React.createElement(BusinessOnboard,{setUser:setUser,go:go,user:user})):React.createElement(AuthPage,{setUser:setUser,go:go});
     if(page==="admin")       return user&&user.role==="admin"?React.createElement(AdminPanel,null):React.createElement(AuthPage,{setUser:setUser,go:go});
     return React.createElement(HomePage,{go:go,setBiz:setSelBiz});
   }
